@@ -31,7 +31,6 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -41,7 +40,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'drf_yasg',
 
-    'product'
+    'product',
+    'account'
 ]
 
 MIDDLEWARE = [
@@ -74,6 +74,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'forcatProject.wsgi.application'
 
+AUTH_USER_MODEL = 'account.User'
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
