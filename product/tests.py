@@ -50,4 +50,16 @@ class TestCase:
         }
 
     def test_모든_상품_조회_테스트(self, api_client, 테스트_상품_생성):
-        ...
+        # 상품 리스트 조회를 위한 URL 생성
+        url = reverse('product-list')
+        response = api_client.get(url)
+
+        assert response.status_code == 200
+        assert len(response.json()) > 0
+
+        first_product = response.json()[0]
+
+        assert first_product['name'] == 'Test Product'
+        assert first_product['thumbnail'] == 'http://testserver/test_thumbnail.jpg'
+        assert first_product['price'] == '100.00'
+        assert len(first_product['description_images']) == 2
