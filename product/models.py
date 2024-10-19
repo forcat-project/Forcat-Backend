@@ -31,8 +31,12 @@ class Category(models.Model):
     category_id = models.AutoField(primary_key=True)
     parent_category = models.ForeignKey('self', null=True, blank=True, on_delete=models.SET_NULL, related_name='subcategories')
     name = models.CharField(max_length=255, unique=True)
+
+
     def __str__(self):
         return self.name
+
+
 class ProductCategory(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
@@ -40,5 +44,7 @@ class ProductCategory(models.Model):
         constraints = [
             models.UniqueConstraint(fields=['product', 'category'], name='unique_product_category')
         ]
+
+
     def __str__(self):
         return f"{self.product.name} in {self.category.name}"
