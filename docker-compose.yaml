@@ -1,0 +1,14 @@
+version: "3"
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    environment:
+      # 필요한 환경 변수를 설정
+      DJANGO_SETTINGS_MODULE: forcatProject.settings
