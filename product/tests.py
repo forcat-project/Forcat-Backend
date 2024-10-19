@@ -93,44 +93,48 @@ class TestCase:
 
         response = api_client.get(url)
 
-        assert response.json() == [
-            {
-                "product_id": 1,
-                "description_images": [
-                    {"image_url": "https://url/test_image_1_1.jpg"},
-                    {"image_url": "https://url/test_image_1_2.jpg"},
-                ],
-                "categories": [{"name": "category_1"}],
-                "name": "Test Product 1",
-                "thumbnail_url": "https://url/test_thumbnail_1.jpg",
-                "price": "100.00",
-                "discount_rate": "5.00",
-                "purchase_count": 5,
-            },
-            {
-                "product_id": 2,
-                "description_images": [
-                    {"image_url": "https://url/test_image_2_1.jpg"},
-                    {"image_url": "https://url/test_image_2_2.jpg"},
-                ],
-                "categories": [{"name": "category_1"}, {"name": "category_2"}],
-                "name": "Test Product 2",
-                "thumbnail_url": "https://url/test_thumbnail_2.jpg",
-                "price": "200.00",
-                "discount_rate": "10.00",
-                "purchase_count": 10,
-            },
-            {
-                "product_id": 3,
-                "description_images": [
-                    {"image_url": "https://url/test_image_3_1.jpg"},
-                    {"image_url": "https://url/test_image_3_2.jpg"},
-                ],
-                "categories": [{"name": "category_1"}],
-                "name": "Test Product 3",
-                "thumbnail_url": "https://url/test_thumbnail_3.jpg",
-                "price": "300.00",
-                "discount_rate": "15.00",
-                "purchase_count": 15,
-            },
-        ]
+        assert response.json() == {
+            "next": None,
+            "previous": None,
+            "results": [
+                {
+                    "product_id": 3,
+                    "description_images": [
+                        {"image_url": "https://url/test_image_3_1.jpg"},
+                        {"image_url": "https://url/test_image_3_2.jpg"},
+                    ],
+                    "categories": [{"name": "category_1"}],
+                    "name": "Test Product 3",
+                    "thumbnail_url": "https://url/test_thumbnail_3.jpg",
+                    "price": "300.00",
+                    "discount_rate": "15.00",
+                    "purchase_count": 15,
+                },
+                {
+                    "product_id": 2,
+                    "description_images": [
+                        {"image_url": "https://url/test_image_2_1.jpg"},
+                        {"image_url": "https://url/test_image_2_2.jpg"},
+                    ],
+                    "categories": [{"name": "category_1"}, {"name": "category_2"}],
+                    "name": "Test Product 2",
+                    "thumbnail_url": "https://url/test_thumbnail_2.jpg",
+                    "price": "200.00",
+                    "discount_rate": "10.00",
+                    "purchase_count": 10,
+                },
+                {
+                    "product_id": 1,
+                    "description_images": [
+                        {"image_url": "https://url/test_image_1_1.jpg"},
+                        {"image_url": "https://url/test_image_1_2.jpg"},
+                    ],
+                    "categories": [{"name": "category_1"}],
+                    "name": "Test Product 1",
+                    "thumbnail_url": "https://url/test_thumbnail_1.jpg",
+                    "price": "100.00",
+                    "discount_rate": "5.00",
+                    "purchase_count": 5,
+                },
+            ],
+        }
