@@ -20,7 +20,7 @@ schema_view = get_schema_view(
 )
 
 
-router = routers.DefaultRouter()
+router = routers.DefaultRouter(trailing_slash=False)
 router.register(r'products', ProductViewSet)
 
 urlpatterns = [
