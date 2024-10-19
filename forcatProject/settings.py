@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "drf_yasg",
     "corsheaders",
     "product",
+    "account",
 ]
 
 MIDDLEWARE = [
@@ -74,8 +75,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "forcatProject.wsgi.application"
 
+AUTH_USER_MODEL = "account.User"
 CORS_ORIGIN_ALLOW_ALL = True
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ["*"]
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
