@@ -7,7 +7,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from forcatProject.settings import KAKAO_REDIRECT_URI, KAKAO_CLIENT_ID, KAKAO_CLIENT_SECRET
+from forcatProject.settings import KAKAO_REDIRECT_URI, KAKAO_CLIENT_ID, KAKAO_CLIENT_SECRET, FRONT_END_ENDPOINT
 
 
 class KakaoOauthViewSet(APIView):
@@ -30,8 +30,8 @@ class KakaoOauthViewSet(APIView):
 
         if self._is_user_exists(user_info["id"]):
             auth_token = self._get_auth_token(user_info["id"])
-            return redirect(f"프론트_엔드포인트?token={auth_token}")
-        return redirect(f'프론트_엔드포인트?id={user_info["id"]}&nickname={user_info["properties"]["nickname"]}&profile_image=${user_info["properties"]["nickname"]}&')
+            return redirect(f"{FRONT_END_ENDPOINT}?token={auth_token}")
+        return redirect(f'{FRONT_END_ENDPOINT}?id={user_info["id"]}&nickname={user_info["properties"]["nickname"]}&profile_image=${user_info["properties"]["nickname"]}&')
 
     def _get_code_from_request(self, request) -> str:
         """
@@ -71,8 +71,14 @@ class KakaoOauthViewSet(APIView):
 
         return user_info_response.json()
 
-    def _is_user_exists(self, param):
+    def _is_user_exists(self, kakao_id: str) -> bool:
+        """
+        kakao_id로 이미 가입한 유저가 존재하는지 확인합니다.
+        """
         pass
 
-    def _get_auth_token(self, param):
+    def _get_auth_token(self, kakao_id: str) -> bool:
+        """
+        우리 서버의 auth token을 User의 정보로 가져옵니다.
+        """
         pass
