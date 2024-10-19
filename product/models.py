@@ -5,7 +5,7 @@ from decimal import Decimal
 class Product(models.Model):
     product_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255)
-    thumbnail = models.URLField()
+    thumbnail_url = models.URLField()
     description_images = models.ManyToManyField('ProductImage', related_name='products')
     price = models.DecimalField(max_digits=10, decimal_places=2)
     discount_rate = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('0.00'))
@@ -21,7 +21,7 @@ class Product(models.Model):
 
 
 class ProductImage(models.Model):
-    image = models.URLField()
+    image_url = models.URLField()
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

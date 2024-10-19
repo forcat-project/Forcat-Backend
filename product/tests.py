@@ -3,7 +3,7 @@ from decimal import Decimal
 import pytest
 from django.urls import reverse
 from rest_framework.test import APIClient
-from product.models import Product, ProductImage
+from product.models import Product, ProductImage, Category, ProductCategory
 
 
 @pytest.fixture(scope="session")
@@ -15,15 +15,22 @@ def api_client():
 def 테스트_상품_생성():
     product = Product.objects.create(
         name="Test Product",
-        thumbnail="test_thumbnail.jpg",
+        thumbnail_url="https://url/test_thumbnail.jpg",
         price=Decimal('100.00'),
         discount_rate=Decimal('10.00'),
         purchase_count=5
     )
-    product_image = ProductImage.objects.create(image="test_image.jpg")
-    product_image_2 = ProductImage.objects.create(image="test_image_2.jpg")
+    product_image = ProductImage.objects.create(image_url="https://url/test_image.jpg")
+    product_image_2 = ProductImage.objects.create(image_url="https://url/test_image_2.jpg")
+
+    category_1 = Category.objects.create(name="category_1")
+    category_2 = Category.objects.create(name="category_2", parent_category=category_1)
+
     product.description_images.add(product_image)
     product.description_images.add(product_image_2)
+
+    ProductCategory.objects.create(product=product, category=category_1)
+    ProductCategory.objects.create(product=product, category=category_2)
 
 
 @pytest.mark.django_db
@@ -39,14 +46,18 @@ class TestCase:
         assert response.json() == {
             'product_id': 1,
             'description_images': [
-                {'image': 'http://testserver/test_image.jpg'},
-                {'image': 'http://testserver/test_image_2.jpg'}
+                {'image_url': 'https://url/test_image.jpg'},
+                {'image_url': 'https://url/test_image_2.jpg'}
             ],
             'name': 'Test Product',
-            'thumbnail': 'http://testserver/test_thumbnail.jpg',
+            'thumbnail_url': 'https://url/test_thumbnail.jpg',
             'price': '100.00',
             'discount_rate': '10.00',
-            'purchase_count': 5
+            'purchase_count': 5,
+            'categories': [
+                {'name': 'category_1'},
+                {'name': 'category_2'}
+            ]
         }
 
     def test_모든_상품_조회_테스트(self, api_client, 테스트_상품_생성):
