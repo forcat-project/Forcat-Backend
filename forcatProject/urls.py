@@ -4,6 +4,8 @@ from drf_yasg.views import get_schema_view
 from rest_framework import routers
 from rest_framework.permissions import AllowAny
 
+from account.api.kakao_oauth_views import KakaoOauthViewSet
+from product.api.views import ProductViewSet
 from product.api.views import ProductViewSet, CategoryViewSet
 
 schema_view = get_schema_view(
@@ -30,5 +32,6 @@ urlpatterns = [
         schema_view.with_ui("swagger", cache_timeout=0),
         name="schema-swagger-ui",
     ),
+    path("api/oauth/kakao", KakaoOauthViewSet.as_view(), name="kakao-oauth-login"),
     path("api/", include(router.urls)),
 ]
