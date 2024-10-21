@@ -20,7 +20,9 @@ class Product(models.Model):
 
     @property
     def discounted_price(self):
-        return Decimal(self.price) - Decimal(self.discount_rate / Decimal("100.00"))
+        return Decimal(self.price) - Decimal(
+            self.price * (self.discount_rate / Decimal("100.00"))
+        )
 
     def __str__(self):
         return self.name
