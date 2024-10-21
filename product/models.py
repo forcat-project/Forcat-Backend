@@ -12,6 +12,7 @@ class Product(models.Model):
     discount_rate = models.DecimalField(
         max_digits=5, decimal_places=2, default=Decimal("0.00"), null=True
     )
+    remain_count = models.PositiveIntegerField(default=0)
     purchase_count = models.PositiveIntegerField(default=0, null=True)
     categories = models.ManyToManyField(
         "Category", through="ProductCategory", related_name="products"
