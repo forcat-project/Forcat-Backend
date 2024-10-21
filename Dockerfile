@@ -20,7 +20,7 @@ RUN poetry install --no-root
 COPY . .
 
 # 포트 설정 (Django의 기본 포트)
-EXPOSE 8000
+EXPOSE 80
 
 # Django 서버 실행
-CMD ["sh", "-c", "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"]
+CMD ["sh", "-c", "python manage.py migrate && python manage.py runserver 0.0.0.0:80"]
