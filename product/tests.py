@@ -77,6 +77,7 @@ class TestCase:
             "thumbnail_url": "https://url/test_thumbnail.jpg",
             "price": "100.00",
             "discount_rate": "10.00",
+            "remain_count": 0,
             "purchase_count": 5,
             "categories": [{"name": "category_1"}, {"name": "category_2"}],
         }
@@ -99,6 +100,7 @@ class TestCase:
                     "thumbnail_url": "https://url/test_thumbnail_3.jpg",
                     "price": "300.00",
                     "discount_rate": "15.00",
+                    "remain_count": 0,
                     "purchase_count": 15,
                 },
                 {
@@ -110,6 +112,7 @@ class TestCase:
                     "thumbnail_url": "https://url/test_thumbnail_2.jpg",
                     "price": "200.00",
                     "discount_rate": "10.00",
+                    "remain_count": 0,
                     "purchase_count": 10,
                 },
                 {
@@ -121,6 +124,7 @@ class TestCase:
                     "thumbnail_url": "https://url/test_thumbnail_1.jpg",
                     "price": "100.00",
                     "discount_rate": "5.00",
+                    "remain_count": 0,
                     "purchase_count": 5,
                 },
             ],
@@ -147,6 +151,7 @@ class TestCase:
                     "thumbnail_url": "https://url/test_thumbnail_3.jpg",
                     "price": "300.00",
                     "discount_rate": "15.00",
+                    "remain_count": 0,
                     "purchase_count": 15,
                 },
                 {
@@ -158,6 +163,7 @@ class TestCase:
                     "thumbnail_url": "https://url/test_thumbnail_2.jpg",
                     "price": "200.00",
                     "discount_rate": "10.00",
+                    "remain_count": 0,
                     "purchase_count": 10,
                 },
             ],
@@ -181,6 +187,7 @@ class TestCase:
                     "thumbnail_url": "https://url/test_thumbnail_3.jpg",
                     "price": "300.00",
                     "discount_rate": "15.00",
+                    "remain_count": 0,
                     "purchase_count": 15,
                 }
             ],
