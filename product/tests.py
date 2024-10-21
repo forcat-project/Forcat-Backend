@@ -3,7 +3,7 @@ from decimal import Decimal
 import pytest
 from django.urls import reverse
 from rest_framework.test import APIClient
-from product.models import Product, ProductImage, Category, ProductCategory
+from product.models import Product, Category, ProductCategory
 
 
 @pytest.fixture(scope="session")
@@ -14,22 +14,18 @@ def api_client():
 @pytest.fixture()
 def 테스트_상품_생성():
     product = Product.objects.create(
+        product_id=1,
         name="Test Product",
+        company="ohYes",
         thumbnail_url="https://url/test_thumbnail.jpg",
+        description_image_url="https://url/test_image.jpg",
         price=Decimal("100.00"),
         discount_rate=Decimal("10.00"),
         purchase_count=5,
     )
-    product_image = ProductImage.objects.create(image_url="https://url/test_image.jpg")
-    product_image_2 = ProductImage.objects.create(
-        image_url="https://url/test_image_2.jpg"
-    )
 
     category_1 = Category.objects.create(name="category_1")
     category_2 = Category.objects.create(name="category_2", parent_category=category_1)
-
-    product.description_images.add(product_image)
-    product.description_images.add(product_image_2)
 
     ProductCategory.objects.create(product=product, category=category_1)
     ProductCategory.objects.create(product=product, category=category_2)
@@ -45,19 +41,15 @@ def 테스트_여러_상품_생성():
     # 여러 상품 생성
     for i in range(1, 4):  # 3개의 상품 생성
         product = Product.objects.create(
+            product_id=i,
             name=f"Test Product {i}",
+            company="ohYes",
             thumbnail_url=f"https://url/test_thumbnail_{i}.jpg",
+            description_image_url=f"https://url/test_image_{i}.jpg",
             price=Decimal(f"{100 * i}.00"),
             discount_rate=Decimal(f"{5 * i}.00"),
             purchase_count=i * 5,
         )
-
-        # 각 상품에 대한 이미지 생성
-        for j in range(1, 3):  # 각 상품마다 2개의 이미지 생성
-            product_image = ProductImage.objects.create(
-                image_url=f"https://url/test_image_{i}_{j}.jpg"
-            )
-            product.description_images.add(product_image)
 
         # 카테고리 연결
         ProductCategory.objects.create(product=product, category=category_1)
@@ -79,11 +71,9 @@ class TestCase:
         # 응답 데이터가 잘 전달 되는지 확인
         assert response.json() == {
             "product_id": 1,
-            "description_images": [
-                {"image_url": "https://url/test_image.jpg"},
-                {"image_url": "https://url/test_image_2.jpg"},
-            ],
+            "description_image_url": "https://url/test_image.jpg",
             "name": "Test Product",
+            "company": "ohYes",
             "thumbnail_url": "https://url/test_thumbnail.jpg",
             "price": "100.00",
             "discount_rate": "10.00",
@@ -102,12 +92,10 @@ class TestCase:
             "results": [
                 {
                     "product_id": 3,
-                    "description_images": [
-                        {"image_url": "https://url/test_image_3_1.jpg"},
-                        {"image_url": "https://url/test_image_3_2.jpg"},
-                    ],
+                    "description_image_url": "https://url/test_image_3.jpg",
                     "categories": [{"name": "category_1"}, {"name": "category_3"}],
                     "name": "Test Product 3",
+                    "company": "ohYes",
                     "thumbnail_url": "https://url/test_thumbnail_3.jpg",
                     "price": "300.00",
                     "discount_rate": "15.00",
@@ -115,12 +103,10 @@ class TestCase:
                 },
                 {
                     "product_id": 2,
-                    "description_images": [
-                        {"image_url": "https://url/test_image_2_1.jpg"},
-                        {"image_url": "https://url/test_image_2_2.jpg"},
-                    ],
+                    "description_image_url": "https://url/test_image_2.jpg",
                     "categories": [{"name": "category_1"}, {"name": "category_2"}],
                     "name": "Test Product 2",
+                    "company": "ohYes",
                     "thumbnail_url": "https://url/test_thumbnail_2.jpg",
                     "price": "200.00",
                     "discount_rate": "10.00",
@@ -128,12 +114,10 @@ class TestCase:
                 },
                 {
                     "product_id": 1,
-                    "description_images": [
-                        {"image_url": "https://url/test_image_1_1.jpg"},
-                        {"image_url": "https://url/test_image_1_2.jpg"},
-                    ],
+                    "description_image_url": "https://url/test_image_1.jpg",
                     "categories": [{"name": "category_1"}],
                     "name": "Test Product 1",
+                    "company": "ohYes",
                     "thumbnail_url": "https://url/test_thumbnail_1.jpg",
                     "price": "100.00",
                     "discount_rate": "5.00",
@@ -156,12 +140,10 @@ class TestCase:
             "results": [
                 {
                     "product_id": 3,
-                    "description_images": [
-                        {"image_url": "https://url/test_image_3_1.jpg"},
-                        {"image_url": "https://url/test_image_3_2.jpg"},
-                    ],
+                    "description_image_url": "https://url/test_image_3.jpg",
                     "categories": [{"name": "category_1"}, {"name": "category_3"}],
                     "name": "Test Product 3",
+                    "company": "ohYes",
                     "thumbnail_url": "https://url/test_thumbnail_3.jpg",
                     "price": "300.00",
                     "discount_rate": "15.00",
@@ -169,12 +151,10 @@ class TestCase:
                 },
                 {
                     "product_id": 2,
-                    "description_images": [
-                        {"image_url": "https://url/test_image_2_1.jpg"},
-                        {"image_url": "https://url/test_image_2_2.jpg"},
-                    ],
+                    "description_image_url": "https://url/test_image_2.jpg",
                     "categories": [{"name": "category_1"}, {"name": "category_2"}],
                     "name": "Test Product 2",
+                    "company": "ohYes",
                     "thumbnail_url": "https://url/test_thumbnail_2.jpg",
                     "price": "200.00",
                     "discount_rate": "10.00",
@@ -194,12 +174,10 @@ class TestCase:
             "results": [
                 {
                     "product_id": 3,
-                    "description_images": [
-                        {"image_url": "https://url/test_image_3_1.jpg"},
-                        {"image_url": "https://url/test_image_3_2.jpg"},
-                    ],
+                    "description_image_url": "https://url/test_image_3.jpg",
                     "categories": [{"name": "category_1"}, {"name": "category_3"}],
                     "name": "Test Product 3",
+                    "company": "ohYes",
                     "thumbnail_url": "https://url/test_thumbnail_3.jpg",
                     "price": "300.00",
                     "discount_rate": "15.00",
