@@ -80,7 +80,10 @@ class TestCase:
             "discounted_price": 90.0,
             "remain_count": 0,
             "purchase_count": 5,
-            "categories": [{"name": "category_1"}, {"name": "category_2"}],
+            "categories": [
+                {"category_id": 1, "name": "category_1"},
+                {"category_id": 2, "name": "category_2"},
+            ],
         }
 
     def test_모든_상품_조회_테스트(self, api_client, 테스트_여러_상품_생성):
@@ -95,7 +98,10 @@ class TestCase:
                 {
                     "product_id": 3,
                     "description_image_url": "https://url/test_image_3.jpg",
-                    "categories": [{"name": "category_1"}, {"name": "category_3"}],
+                    "categories": [
+                        {"category_id": 1, "name": "category_1"},
+                        {"category_id": 3, "name": "category_3"},
+                    ],
                     "name": "Test Product 3",
                     "company": "ohYes",
                     "thumbnail_url": "https://url/test_thumbnail_3.jpg",
@@ -108,7 +114,10 @@ class TestCase:
                 {
                     "product_id": 2,
                     "description_image_url": "https://url/test_image_2.jpg",
-                    "categories": [{"name": "category_1"}, {"name": "category_2"}],
+                    "categories": [
+                        {"category_id": 1, "name": "category_1"},
+                        {"category_id": 2, "name": "category_2"},
+                    ],
                     "name": "Test Product 2",
                     "company": "ohYes",
                     "thumbnail_url": "https://url/test_thumbnail_2.jpg",
@@ -121,7 +130,7 @@ class TestCase:
                 {
                     "product_id": 1,
                     "description_image_url": "https://url/test_image_1.jpg",
-                    "categories": [{"name": "category_1"}],
+                    "categories": [{"category_id": 1, "name": "category_1"}],
                     "name": "Test Product 1",
                     "company": "ohYes",
                     "thumbnail_url": "https://url/test_thumbnail_1.jpg",
@@ -149,7 +158,10 @@ class TestCase:
                 {
                     "product_id": 3,
                     "description_image_url": "https://url/test_image_3.jpg",
-                    "categories": [{"name": "category_1"}, {"name": "category_3"}],
+                    "categories": [
+                        {"category_id": 1, "name": "category_1"},
+                        {"category_id": 3, "name": "category_3"},
+                    ],
                     "name": "Test Product 3",
                     "company": "ohYes",
                     "thumbnail_url": "https://url/test_thumbnail_3.jpg",
@@ -162,7 +174,10 @@ class TestCase:
                 {
                     "product_id": 2,
                     "description_image_url": "https://url/test_image_2.jpg",
-                    "categories": [{"name": "category_1"}, {"name": "category_2"}],
+                    "categories": [
+                        {"category_id": 1, "name": "category_1"},
+                        {"category_id": 2, "name": "category_2"},
+                    ],
                     "name": "Test Product 2",
                     "company": "ohYes",
                     "thumbnail_url": "https://url/test_thumbnail_2.jpg",
@@ -187,7 +202,10 @@ class TestCase:
                 {
                     "product_id": 3,
                     "description_image_url": "https://url/test_image_3.jpg",
-                    "categories": [{"name": "category_1"}, {"name": "category_3"}],
+                    "categories": [
+                        {"category_id": 1, "name": "category_1"},
+                        {"category_id": 3, "name": "category_3"},
+                    ],
                     "name": "Test Product 3",
                     "company": "ohYes",
                     "thumbnail_url": "https://url/test_thumbnail_3.jpg",
@@ -199,3 +217,17 @@ class TestCase:
                 }
             ],
         }
+
+    def test_상품_카테고리_조회_테스트(self, api_client, 테스트_여러_상품_생성):
+        url = reverse("category-list")
+
+        response = api_client.get(url)
+
+        assert response.json() == [
+            {
+                "category_id": 1,
+                "name": "category_1",
+                "subcategories": [{"category_id": 2, "name": "category_2"}],
+            },
+            {"category_id": 3, "name": "category_3", "subcategories": []},
+        ]
