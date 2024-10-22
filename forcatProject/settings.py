@@ -10,7 +10,13 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
+import os
 from pathlib import Path
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -31,16 +37,19 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    ####
     "rest_framework",
     "drf_yasg",
     "corsheaders",
+    "rest_framework_simplejwt",
+    ###
     "product",
+    "account",
 ]
 
 MIDDLEWARE = [
@@ -74,8 +83,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "forcatProject.wsgi.application"
 
+AUTH_USER_MODEL = "account.User"
 CORS_ORIGIN_ALLOW_ALL = True
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ["*"]
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
@@ -88,8 +98,9 @@ DATABASES = {
 }
 
 REST_FRAMEWORK = {
-    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.CursorPagination",
-    "PAGE_SIZE": 12,
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ),
 }
 
 
@@ -117,7 +128,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = "Asia/Seoul"
 
 USE_I18N = True
 
@@ -133,3 +144,9 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# for oauth
+KAKAO_CLIENT_ID = os.getenv("KAKAO_CLIENT_ID")
+KAKAO_REDIRECT_URI = os.getenv("KAKAO_REDIRECT_URI")
+KAKAO_CLIENT_SECRET = os.getenv("KAKAO_CLIENT_SECRET")
+FRONT_END_ENDPOINT = os.getenv("FRONT_END_ENDPOINT")
