@@ -27,7 +27,7 @@ class ProductViewSet(
     pagination_class = MyCursorPagination
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_class = ProductFilter
-    ordering_fields = ['discount_rate', 'price']
+    ordering_fields = ['discount_rate', 'price', 'purchase_count']
 
     def get_queryset(self):
         queryset = super().get_queryset()

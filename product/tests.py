@@ -341,3 +341,22 @@ class TestProductOrdering:
         assert results[0]["discount_rate"] == "15.00"  # 첫 번째 상품의 할인율
         assert results[1]["discount_rate"] == "10.00"  # 두 번째 상품의 할인율
         assert results[2]["discount_rate"] == "5.00"   # 세 번째 상품의 할인율
+
+
+    def test_상품_구매횟수_내림차순_정렬_테스트(self, api_client, 테스트_여러_상품_생성):
+        # 쿼리 파라미터로 ordering=-purchase_count를 전달
+        url = "/api/products?ordering=-purchase_count"
+
+        # GET 요청으로 purchase_count 기준 내림차순 정렬된 상품 조회
+        response = api_client.get(url)
+
+        # 응답이 200 OK인지 확인
+        assert response.status_code == 200
+
+        # 페이지네이션 구조에서 results 항목만 확인
+        results = response.json().get("results", [])
+
+        # 응답 데이터가 purchase_count 기준으로 내림차순 정렬되었는지 확인
+        assert results[0]["purchase_count"] == 15  # 첫 번째 상품의 구매 횟수
+        assert results[1]["purchase_count"] == 10  # 두 번째 상품의 구매 횟수
+        assert results[2]["purchase_count"] == 5   # 세 번째 상품의 구매 횟수
