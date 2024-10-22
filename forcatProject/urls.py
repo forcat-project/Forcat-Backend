@@ -18,10 +18,8 @@ from account.api.views import (
     PointViewSet,
     CatBreedViewSet,
 )
-from product.api.views import (
-    ProductViewSet,
-    CategoryViewSet,
-)
+from account.api.naver_oauth_views import NaverOauthViewSet
+from product.api.views import ProductViewSet, CategoryViewSet
 
 
 # Swagger 설정
@@ -147,6 +145,7 @@ api_v1_patterns = [
     ),
     # OAuth 관련
     path("api/oauth/google", GoogleOauthViewSet.as_view(), name="google-oauth-login"),
+    path("api/oauth/naver", NaverOauthViewSet.as_view(), name="naver-oauth-login"),
     path("oauth/kakao", KakaoOauthViewSet.as_view(), name="kakao-oauth-login"),
     # 파일 업로드
     path("upload", FileUploadView.as_view(), name="file-upload"),
