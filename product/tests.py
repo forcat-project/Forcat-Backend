@@ -1,10 +1,10 @@
-from base64 import b64decode
 from decimal import Decimal
-from urllib import parse
 
 import pytest
+
+# from django.db import connection
+# from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
-from rest_framework.pagination import _positive_int
 from rest_framework.test import APIClient
 from product.models import Product, Category, ProductCategory
 
@@ -60,6 +60,49 @@ def 테스트_여러_상품_생성():
             ProductCategory.objects.create(product=product, category=category_2)
         elif i % 3 == 0:
             ProductCategory.objects.create(product=product, category=category_3)
+
+
+@pytest.fixture()
+def 테스트_한글_이름_여러_상품_생성():
+    category_1 = Category.objects.create(name="카테고리_1")
+    category_2 = Category.objects.create(name="카테고리_2")
+
+    product_1 = Product.objects.create(
+        product_id=1,
+        name="고양이_사료_맛있다",
+        company="삼성",
+        thumbnail_url=f"https://url/test_thumbnail.jpg",
+        description_image_url=f"https://url/test_image.jpg",
+        price=Decimal("1000"),
+        discount_rate=Decimal(f"5"),
+        purchase_count=300,
+    )
+
+    product_2 = Product.objects.create(
+        product_id=2,
+        name="고양이_사료_맛없다",
+        company="삼성",
+        thumbnail_url=f"https://url/test_thumbnail.jpg",
+        description_image_url=f"https://url/test_image.jpg",
+        price=Decimal("1000"),
+        discount_rate=Decimal(f"5"),
+        purchase_count=300,
+    )
+
+    product_3 = Product.objects.create(
+        product_id=3,
+        name="고양이 맛있다",
+        company="삼성",
+        thumbnail_url=f"https://url/test_thumbnail.jpg",
+        description_image_url=f"https://url/test_image.jpg",
+        price=Decimal("1000"),
+        discount_rate=Decimal(f"5"),
+        purchase_count=300,
+    )
+
+    ProductCategory.objects.create(product=product_1, category=category_1)
+    ProductCategory.objects.create(product=product_2, category=category_2)
+    ProductCategory.objects.create(product=product_3, category=category_2)
 
 
 @pytest.fixture()
@@ -221,10 +264,13 @@ class TestCase:
             ],
         }
 
-    def test_모든_상품_조회_이름_필터링_테스트(self, api_client, 테스트_여러_상품_생성):
+    def test_모든_상품_조회_이름_필터링_테스트(
+        self, api_client, 테스트_한글_이름_여러_상품_생성
+    ):
+        # with CaptureQueriesContext(connection) as ctx:
         url = reverse("product-list")
 
-        response = api_client.get(url + "?name=3")
+        response = api_client.get(url + "?name=맛있다")
 
         assert response.json() == {
             "next": None,
@@ -232,20 +278,30 @@ class TestCase:
             "results": [
                 {
                     "product_id": 3,
-                    "description_image_url": "https://url/test_image_3.jpg",
-                    "categories": [
-                        {"category_id": 1, "name": "category_1"},
-                        {"category_id": 3, "name": "category_3"},
-                    ],
-                    "name": "Test Product 3",
-                    "company": "ohYes",
-                    "thumbnail_url": "https://url/test_thumbnail_3.jpg",
-                    "price": "300.00",
-                    "discount_rate": "15.00",
-                    "discounted_price": 255.0,
+                    "categories": [{"category_id": 2, "name": "카테고리_2"}],
+                    "discounted_price": 950.0,
+                    "name": "고양이 맛있다",
+                    "thumbnail_url": "https://url/test_thumbnail.jpg",
+                    "company": "삼성",
+                    "description_image_url": "https://url/test_image.jpg",
+                    "price": "1000.00",
+                    "discount_rate": "5.00",
                     "remain_count": 0,
-                    "purchase_count": 15,
-                }
+                    "purchase_count": 300,
+                },
+                {
+                    "product_id": 1,
+                    "categories": [{"category_id": 1, "name": "카테고리_1"}],
+                    "discounted_price": 950.0,
+                    "name": "고양이_사료_맛있다",
+                    "thumbnail_url": "https://url/test_thumbnail.jpg",
+                    "company": "삼성",
+                    "description_image_url": "https://url/test_image.jpg",
+                    "price": "1000.00",
+                    "discount_rate": "5.00",
+                    "remain_count": 0,
+                    "purchase_count": 300,
+                },
             ],
         }
 
