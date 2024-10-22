@@ -89,7 +89,7 @@ DATABASES = {
 
 REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.CursorPagination",
-    "PAGE_SIZE": 10,
+    "PAGE_SIZE": 12,
 }
 
 
