@@ -1,3 +1,5 @@
+from urllib.parse import unquote
+
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, mixins
 from rest_framework.pagination import CursorPagination
@@ -12,7 +14,7 @@ from product.models import Product, Category
 
 
 class MyCursorPagination(CursorPagination):
-    page_size = 10
+    page_size = 12
     ordering = "-product_id"  # `product_id` 필드를 기준으로 역순 정렬
 
 

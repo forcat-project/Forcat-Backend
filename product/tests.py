@@ -1,7 +1,10 @@
+from base64 import b64decode
 from decimal import Decimal
+from urllib import parse
 
 import pytest
 from django.urls import reverse
+from rest_framework.pagination import _positive_int
 from rest_framework.test import APIClient
 from product.models import Product, Category, ProductCategory
 
@@ -40,6 +43,34 @@ def 테스트_여러_상품_생성():
 
     # 여러 상품 생성
     for i in range(1, 4):  # 3개의 상품 생성
+        product = Product.objects.create(
+            product_id=i,
+            name=f"Test Product {i}",
+            company="ohYes",
+            thumbnail_url=f"https://url/test_thumbnail_{i}.jpg",
+            description_image_url=f"https://url/test_image_{i}.jpg",
+            price=Decimal(f"{100 * i}.00"),
+            discount_rate=Decimal(f"{5 * i}.00"),
+            purchase_count=i * 5,
+        )
+
+        # 카테고리 연결
+        ProductCategory.objects.create(product=product, category=category_1)
+        if i % 2 == 0:  # 짝수 번호의 상품은 두 번째 카테고리에도 연결
+            ProductCategory.objects.create(product=product, category=category_2)
+        elif i % 3 == 0:
+            ProductCategory.objects.create(product=product, category=category_3)
+
+
+@pytest.fixture()
+def 테스트_대량_상품_생성():
+    # 카테고리 생성
+    category_1 = Category.objects.create(name="category_1")
+    category_2 = Category.objects.create(name="category_2", parent_category=category_1)
+    category_3 = Category.objects.create(name="category_3")
+
+    # 여러 상품 생성
+    for i in range(1, 20):  # 19개의 상품 생성
         product = Product.objects.create(
             product_id=i,
             name=f"Test Product {i}",
@@ -231,3 +262,6 @@ class TestCase:
             },
             {"category_id": 3, "name": "category_3", "subcategories": []},
         ]
+
+    def test_모든_상품_조회_페이징_테스트(self, api_client, 테스트_대량_상품_생성):
+        pass
