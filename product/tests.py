@@ -133,6 +133,15 @@ def 테스트_대량_상품_생성():
             ProductCategory.objects.create(product=product, category=category_3)
 
 
+@pytest.fixture()
+def 테스트_67카테고리_생성():
+    # 카테고리 생성
+    category_67 = Category.objects.create(category_id=67, name="카테고리_67")
+    category_68 = Category.objects.create(name="카테고리_68", parent_category=category_67)
+
+    return category_67, category_68
+
+
 @pytest.mark.django_db
 class TestCase:
     def test_특정_상품_조회_테스트(self, api_client, 테스트_상품_생성):
@@ -322,6 +331,7 @@ class TestCase:
     def test_모든_상품_조회_페이징_테스트(self, api_client, 테스트_대량_상품_생성):
         pass
 
+
 @pytest.mark.django_db
 class TestProductOrdering:
     def test_상품_할인율_내림차순_정렬_테스트(self, api_client, 테스트_여러_상품_생성):
@@ -361,13 +371,6 @@ class TestProductOrdering:
         assert results[1]["purchase_count"] == 10  # 두 번째 상품의 구매 횟수
         assert results[2]["purchase_count"] == 5   # 세 번째 상품의 구매 횟수
 
-@pytest.fixture()
-def 테스트_67카테고리_생성():
-    # 카테고리 생성
-    category_67 = Category.objects.create(category_id=67, name="카테고리_67")
-    category_68 = Category.objects.create(name="카테고리_68", parent_category=category_67)
-
-    return category_67, category_68
 
 @pytest.mark.django_db
 def test_67카테고리_조회_테스트(api_client, 테스트_67카테고리_생성):
