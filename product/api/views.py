@@ -4,6 +4,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, mixins
 from rest_framework.pagination import CursorPagination
 from rest_framework.response import Response
+from rest_framework.filters import OrderingFilter
 
 from product.api.filter import ProductFilter
 from product.api.serializer import (
@@ -24,8 +25,16 @@ class ProductViewSet(
     serializer_class = ProductSerializer
     queryset = Product.objects.prefetch_related("categories").all()
     pagination_class = MyCursorPagination
-    filter_backends = [DjangoFilterBackend]  # 필터 백엔드 활성화
-    filterset_class = ProductFilter  # 필터셋 지정
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    filterset_class = ProductFilter
+    ordering_fields = ['discount_rate', 'price', 'purchase_count']
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        ordering = self.request.query_params.get('ordering', None)
+        if ordering:
+            queryset = queryset.order_by(ordering)
+        return queryset
 
 
 class CategoryViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
