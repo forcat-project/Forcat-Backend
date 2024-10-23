@@ -2,8 +2,6 @@ from decimal import Decimal
 
 import pytest
 
-# from django.db import connection
-# from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from rest_framework.test import APIClient
 from product.models import Product, Category, ProductCategory
@@ -137,7 +135,9 @@ def 테스트_대량_상품_생성():
 def 테스트_67카테고리_생성():
     # 카테고리 생성
     category_67 = Category.objects.create(category_id=67, name="카테고리_67")
-    category_68 = Category.objects.create(name="카테고리_68", parent_category=category_67)
+    category_68 = Category.objects.create(
+        name="카테고리_68", parent_category=category_67
+    )
 
     return category_67, category_68
 
@@ -331,6 +331,13 @@ class TestCase:
     def test_모든_상품_조회_페이징_테스트(self, api_client, 테스트_대량_상품_생성):
         pass
 
+    def test_특정_카테고리_조회_테스트(self, api_client, 테스트_67카테고리_생성):
+        url = reverse("category-detail", kwargs={"pk": 67})
+
+        response = api_client.get(url)
+
+        assert response.json() == {"category_id": 67, "name": "카테고리_67"}
+
 
 @pytest.mark.django_db
 class TestProductOrdering:
@@ -350,10 +357,11 @@ class TestProductOrdering:
         # 응답 데이터가 discount_rate 기준으로 내림차순 정렬되었는지 확인
         assert results[0]["discount_rate"] == "15.00"  # 첫 번째 상품의 할인율
         assert results[1]["discount_rate"] == "10.00"  # 두 번째 상품의 할인율
-        assert results[2]["discount_rate"] == "5.00"   # 세 번째 상품의 할인율
+        assert results[2]["discount_rate"] == "5.00"  # 세 번째 상품의 할인율
 
-
-    def test_상품_구매횟수_내림차순_정렬_테스트(self, api_client, 테스트_여러_상품_생성):
+    def test_상품_구매횟수_내림차순_정렬_테스트(
+        self, api_client, 테스트_여러_상품_생성
+    ):
         # 쿼리 파라미터로 ordering=-purchase_count를 전달
         url = "/api/products?ordering=-purchase_count"
 
@@ -369,7 +377,7 @@ class TestProductOrdering:
         # 응답 데이터가 purchase_count 기준으로 내림차순 정렬되었는지 확인
         assert results[0]["purchase_count"] == 15  # 첫 번째 상품의 구매 횟수
         assert results[1]["purchase_count"] == 10  # 두 번째 상품의 구매 횟수
-        assert results[2]["purchase_count"] == 5   # 세 번째 상품의 구매 횟수
+        assert results[2]["purchase_count"] == 5  # 세 번째 상품의 구매 횟수
 
 
 @pytest.mark.django_db
@@ -384,5 +392,5 @@ def test_67카테고리_조회_테스트(api_client, 테스트_67카테고리_�
     data = response.json()
 
     assert len(data) == 1
-    assert data[0]['category_id'] == 67
-    assert data[0]['name'] == "카테고리_67"
+    assert data[0]["category_id"] == 67
+    assert data[0]["name"] == "카테고리_67"
