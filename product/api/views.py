@@ -42,7 +42,9 @@ class ProductViewSet(
         return queryset
 
 
-class CategoryViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
+class CategoryViewSet(
+    viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins.ListModelMixin
+):
     serializer_class = CategoryListSerializer
     queryset = Category.objects.all()
 
