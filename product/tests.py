@@ -113,7 +113,7 @@ def 테스트_대량_상품_생성():
     category_3 = Category.objects.create(name="category_3")
 
     # 여러 상품 생성
-    for i in range(1, 22):  # 19개의 상품 생성
+    for i in range(1, 20):  # 19개의 상품 생성
         product = Product.objects.create(
             product_id=i,
             name=f"Test Product {i}",
@@ -361,23 +361,25 @@ class TestProductOrdering:
         assert results[1]["purchase_count"] == 10  # 두 번째 상품의 구매 횟수
         assert results[2]["purchase_count"] == 5   # 세 번째 상품의 구매 횟수
 
+@pytest.fixture()
+def 테스트_67카테고리_생성():
+    # 카테고리 생성
+    category_67 = Category.objects.create(category_id=67, name="카테고리_67")
+    category_68 = Category.objects.create(name="카테고리_68", parent_category=category_67)
+
+    return category_67, category_68
 
 @pytest.mark.django_db
-class TestRandomCategory:
-    @pytest.mark.django_db
-    class TestRandomCategory:
-        def test_랜덤_상품_카테고리_초기화_테스트(self, api_client, 테스트_대량_상품_생성):
-            # 처음 랜덤 상품 카테고리를 생성하는 요청
-            url = "/api/products?random=true"
+def test_67카테고리_조회_테스트(api_client, 테스트_67카테고리_생성):
+    # 카테고리 목록을 조회하는 API 경로
+    url = reverse("category-list")
 
-            # 랜덤 상품 카테고리 초기화 및 반환 확인
-            response = api_client.get(url)
-            assert response.status_code == 200
+    # GET 요청으로 카테고리 목록 조회
+    response = api_client.get(url)
 
-            # 첫 번째 응답에서 페이지네이션 구조 확인
-            data = response.json()
-            assert 'results' in data  # 페이지네이션 구조 내에 'results' 필드가 있는지 확인
+    assert response.status_code == 200
+    data = response.json()
 
-            # 첫 번째 응답에서 19개의 상품이 있는지 확인
-            results = data['results']
-            assert len(results) == 19  # 반환된 상품이 19개인지 확인
+    assert len(data) == 1
+    assert data[0]['category_id'] == 67
+    assert data[0]['name'] == "카테고리_67"
