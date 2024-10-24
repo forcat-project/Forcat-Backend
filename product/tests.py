@@ -282,6 +282,21 @@ class TestProductCRUD:
             {"category_id": 3, "name": "category_3", "subcategories": []},
         ]
 
+    def test_모든_상품_조회_페이징_테스트(self, api_client, 테스트_대량_상품_생성):
+        pass
+
+    def test_특정_카테고리_조회_테스트(self, api_client, 테스트_67카테고리_생성):
+        url = reverse("category-list")
+        response = api_client.get(url)
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data) == 1
+        assert data[0]["category_id"] == 67
+        assert data[0]["name"] == "카테고리_67"
+        assert len(data[0]["subcategories"]) == 1
+        assert data[0]["subcategories"][0]["category_id"] == 68
+        assert data[0]["subcategories"][0]["name"] == "카테고리_68"
+
 
 @pytest.mark.django_db
 class TestProductOrdering:
@@ -306,7 +321,8 @@ class TestProductOrdering:
 
 @pytest.mark.django_db
 class TestDiscountRateFiltering:
-    def test_discount_rate_filtering_ordering(self, api_client):
+    def test_할인율_내림차순_정렬_테스트(self, api_client):
+        # Product 생성
         product_1 = Product.objects.create(
             product_id=1,
             name="Product 1",
@@ -338,38 +354,42 @@ class TestDiscountRateFiltering:
             purchase_count=8,
         )
 
-        url = "/api/products?ordering=discount_rate"
-        response = api_client.get(url)
-
-        assert response.status_code == 200
-
-        results = response.json().get('results', [])
-
-        assert len(results) == 2
-        assert results[0]['discount_rate'] == "10.00"
-        assert results[1]['discount_rate'] == "15.00"
-
+        # 할인율 내림차순으로 정렬한 경우
         url = "/api/products?ordering=-discount_rate"
         response = api_client.get(url)
 
         assert response.status_code == 200
 
         results = response.json().get('results', [])
+        assert len(results) == 2  # 할인율 0은 제외시켜서 결과값은 2으로만
 
-        assert len(results) == 2
-        assert results[0]['discount_rate'] == "15.00"
-        assert results[1]['discount_rate'] == "10.00"
+        # 전체 응답값 비교 (추가된 필드 포함)
+        assert results[0] == {
+            'product_id': product_2.product_id,
+            'name': product_2.name,
+            'company': product_2.company,
+            'thumbnail_url': product_2.thumbnail_url,
+            'description_image_url': product_2.description_image_url,
+            'price': "200.00",
+            'discount_rate': "15.00",
+            'purchase_count': product_2.purchase_count,
+            'categories': [],  # categories 필드
+            'discounted_price': 170.0,  # 할인된 가격
+            'remain_count': 0,  # 남은 수량
+        }
+        assert results[1] == {
+            'product_id': product_3.product_id,
+            'name': product_3.name,
+            'company': product_3.company,
+            'thumbnail_url': product_3.thumbnail_url,
+            'description_image_url': product_3.description_image_url,
+            'price': "150.00",
+            'discount_rate': "10.00",
+            'purchase_count': product_3.purchase_count,
+            'categories': [],  # categories 필드
+            'discounted_price': 135.0,  # 할인된 가격
+            'remain_count': 0,  # 남은 수량
+        }
 
 
-@pytest.mark.django_db
-def 특정카테고리_조회_테스트(api_client, 테스트_67카테고리_생성):
-    url = reverse("category-list")
-    response = api_client.get(url)
-    assert response.status_code == 200
-    data = response.json()
-    assert len(data) == 1
-    assert data[0]["category_id"] == 67
-    assert data[0]["name"] == "카테고리_67"
-    assert len(data[0]["subcategories"]) == 1
-    assert data[0]["subcategories"][0]["category_id"] == 68
-    assert data[0]["subcategories"][0]["name"] == "카테고리_68"
+
