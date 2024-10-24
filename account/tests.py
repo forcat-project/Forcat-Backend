@@ -1,5 +1,6 @@
 import pytest
 import requests
+from django.urls import reverse
 from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import AccessToken
 
@@ -48,3 +49,42 @@ class TestCase:
         )
 
         assert res.json()["access_token"] != ""
+
+    def test_유저_조회_테스트(self, api_client, 테스트_카카오_가입_유저_생성):
+        url = reverse("user-detail", kwargs={"pk": 1})
+
+        res = api_client.get(url)
+
+        assert res.json() == {
+            "id": 1,
+            "username": "카카오_유저",
+            "nickname": "카카오_닉네임",
+            "profile_picture": "http://kakao.com",
+            "phone_number": "010-0000-1000",
+            "address": "카카오_사옥",
+            "address_detail": "201호",
+        }
+
+    def test_유저_수정_테스트(self, api_client, 테스트_카카오_가입_유저_생성):
+        url = reverse("user-detail", kwargs={"pk": 1})
+
+        res = api_client.patch(
+            url, data={"username": "네이버_유저", "nickname": "네이버_닉네임"}
+        )
+
+        assert res.json() == {
+            "username": "네이버_유저",
+            "nickname": "네이버_닉네임",
+            "profile_picture": "http://kakao.com",
+            "phone_number": "010-0000-1000",
+            "address": "카카오_사옥",
+            "address_detail": "201호",
+        }
+
+    def test_유저_수정_실패_테스트(self, api_client, 테스트_카카오_가입_유저_생성):
+        url = reverse("user-detail", kwargs={"pk": 1})
+
+        api_client.patch(url, data={"kakao_id": "naver"})
+
+        assert User.objects.filter(kakao_id="kakao").exists() is True
+        assert User.objects.filter(kakao_id="naver").exists() is False
