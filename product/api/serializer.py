@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from product.models import Product, Category
+from product.models import Product, Category, CartItem, Cart
 
 
 class CategoryListSerializer(serializers.ModelSerializer):
@@ -30,3 +30,55 @@ class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = "__all__"
+
+
+class CartProductSerializer(serializers.ModelSerializer):
+    discounted_price = serializers.SerializerMethodField()
+
+    def get_discounted_price(self, obj):
+        return obj.discounted_price  # @property 필드에서 값을 가져옴
+
+    class Meta:
+        model = Product
+        fields = [
+            "product_id",
+            "discounted_price",
+            "name",
+            "thumbnail_url",
+            "company",
+            "price",
+            "discount_rate",
+        ]
+
+
+class CartItemReadSerializer(serializers.ModelSerializer):
+    product = CartProductSerializer(read_only=True)
+
+    class Meta:
+        model = CartItem
+        fields = ["product", "quantity"]
+
+
+class CartItemCreateSerializer(serializers.ModelSerializer):
+    product_id = serializers.IntegerField()
+
+    class Meta:
+        model = CartItem
+        fields = ["product_id", "quantity"]
+
+    def create(self, validated_data):
+        user_id = self.context["user_id"]
+        cart, _ = Cart.objects.get_or_create(user_id=user_id)
+        cart_item = CartItem.objects.create(
+            cart=cart,
+            product_id=validated_data["product_id"],
+            quantity=validated_data["quantity"],
+        )
+        return cart_item
+
+
+class CartItemSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = CartItem
+        fields = ["quantity"]
