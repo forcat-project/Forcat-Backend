@@ -3,8 +3,11 @@ from decimal import Decimal
 import pytest
 
 from django.urls import reverse
+from freezegun import freeze_time
 from rest_framework.test import APIClient
-from product.models import Product, Category, ProductCategory
+
+from account.models import User
+from product.models import Product, Category, ProductCategory, Cart, CartItem
 
 
 @pytest.fixture(scope="session")
@@ -140,6 +143,39 @@ def 테스트_67카테고리_생성():
     )
 
     return category_67, category_68
+
+
+@pytest.fixture()
+def 테스트_장바구니_상품_생성():
+    user = User.objects.create(username="테스트_유저", nickname="테스트_닉네임")
+    cart = Cart.objects.create(user=user)
+
+    product_1 = Product.objects.create(
+        product_id=1,
+        name="테스트_상품_1",
+        thumbnail_url="http://product_1",
+        price=1000,
+        remain_count=1,
+    )
+
+    product_2 = Product.objects.create(
+        product_id=2,
+        name="테스트_상품_2",
+        thumbnail_url="http://product_2",
+        price=2000,
+        remain_count=1,
+    )
+
+    product_3 = Product.objects.create(
+        product_id=3,
+        name="테스트_상품_3",
+        thumbnail_url="http://product_3",
+        price=3000,
+        remain_count=2,
+    )
+
+    CartItem.objects.create(cart=cart, product=product_1)
+    CartItem.objects.create(cart=cart, product=product_2)
 
 
 @pytest.mark.django_db
@@ -378,6 +414,118 @@ class TestProductOrdering:
         assert results[0]["purchase_count"] == 15  # 첫 번째 상품의 구매 횟수
         assert results[1]["purchase_count"] == 10  # 두 번째 상품의 구매 횟수
         assert results[2]["purchase_count"] == 5  # 세 번째 상품의 구매 횟수
+
+
+@pytest.mark.django_db
+class TestCartItem:
+    def test_장바구니_상품_조회_테스트(self, api_client, 테스트_장바구니_상품_생성):
+        url = reverse("user-cart-items", kwargs={"user_id": 1})
+
+        res = api_client.get(url)
+
+        assert res.json() == [
+            {
+                "product": {
+                    "product_id": 1,
+                    "discounted_price": 1000.0,
+                    "name": "테스트_상품_1",
+                    "thumbnail_url": "http://product_1",
+                    "company": None,
+                    "price": "1000.00",
+                    "discount_rate": "0.00",
+                },
+                "quantity": 1,
+            },
+            {
+                "product": {
+                    "product_id": 2,
+                    "discounted_price": 2000.0,
+                    "name": "테스트_상품_2",
+                    "thumbnail_url": "http://product_2",
+                    "company": None,
+                    "price": "2000.00",
+                    "discount_rate": "0.00",
+                },
+                "quantity": 1,
+            },
+        ]
+
+    def test_장바구니_상품_추가_테스트(self, api_client, 테스트_장바구니_상품_생성):
+        url = reverse("user-cart-items", kwargs={"user_id": 1})
+
+        api_client.post(url, data={"product_id": 3, "quantity": 2}, format="json")
+
+        res = api_client.get(url)
+        assert res.json() == [
+            {
+                "product": {
+                    "product_id": 1,
+                    "discounted_price": 1000.0,
+                    "name": "테스트_상품_1",
+                    "thumbnail_url": "http://product_1",
+                    "company": None,
+                    "price": "1000.00",
+                    "discount_rate": "0.00",
+                },
+                "quantity": 1,
+            },
+            {
+                "product": {
+                    "product_id": 2,
+                    "discounted_price": 2000.0,
+                    "name": "테스트_상품_2",
+                    "thumbnail_url": "http://product_2",
+                    "company": None,
+                    "price": "2000.00",
+                    "discount_rate": "0.00",
+                },
+                "quantity": 1,
+            },
+            # 추가된 3번 제품
+            {
+                "product": {
+                    "product_id": 3,
+                    "discounted_price": 3000.0,
+                    "name": "테스트_상품_3",
+                    "thumbnail_url": "http://product_3",
+                    "company": None,
+                    "price": "3000.00",
+                    "discount_rate": "0.00",
+                },
+                "quantity": 2,
+            },
+        ]
+
+    def test_장바구니_상품_업데이트_테스트(self, api_client, 테스트_장바구니_상품_생성):
+        url = reverse("user-cart-item", kwargs={"user_id": 1, "products_id": 1})
+
+        res = api_client.patch(url, data={"quantity": 3}, format="json")
+
+        assert res.json() == {"quantity": 3}
+
+    def test_장바구니_상품_삭제_테스트(self, api_client, 테스트_장바구니_상품_생성):
+        url = reverse("user-cart-item", kwargs={"user_id": 1, "products_id": 1})
+
+        api_client.delete(url)
+
+        get_url = reverse("user-cart-items", kwargs={"user_id": 1})
+
+        res = api_client.get(get_url)
+
+        assert res.json() == [
+            {
+                "product": {
+                    "product_id": 2,
+                    "discounted_price": 2000.0,
+                    "name": "테스트_상품_2",
+                    "thumbnail_url": "http://product_2",
+                    "company": None,
+                    "price": "2000.00",
+                    "discount_rate": "0.00",
+                },
+                "quantity": 1,
+            }
+        ]
 
 
 @pytest.mark.django_db

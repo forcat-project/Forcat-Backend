@@ -1,12 +1,15 @@
-from django.urls import include, path, re_path
+from django.urls import include, path
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import routers
 from rest_framework.permissions import AllowAny
 
 from account.api.kakao_oauth_views import KakaoOauthViewSet
-from product.api.views import ProductViewSet
-from product.api.views import ProductViewSet, CategoryViewSet
+from product.api.views import (
+    ProductViewSet,
+    CategoryViewSet,
+    CartItemViewSet,
+)
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -26,6 +29,7 @@ router = routers.DefaultRouter(trailing_slash=False)
 router.register(r"products", ProductViewSet)
 router.register(r"categories", CategoryViewSet)
 
+
 urlpatterns = [
     path(
         "api/swagger/",
@@ -33,5 +37,26 @@ urlpatterns = [
         name="schema-swagger-ui",
     ),
     path("api/oauth/kakao", KakaoOauthViewSet.as_view(), name="kakao-oauth-login"),
+    path(
+        "api/users/<int:user_id>/cart/products/<int:products_id>",
+        CartItemViewSet.as_view(
+            {
+                "patch": "partial_update",  # 장바구니 아이템 수정 (부분 업데이트)
+                "put": "update",  # 장바구니 아이템 수정 (전체 업데이트)
+                "delete": "destroy",  # 장바구니 아이템 삭제
+            }
+        ),
+        name="user-cart-item",
+    ),
+    path(
+        "api/users/<int:user_id>/cart/products",
+        CartItemViewSet.as_view(
+            {
+                "get": "list",  # 장바구니 아이템 목록 조회
+                "post": "create",  # 장바구니 아이템 추가
+            }
+        ),
+        name="user-cart-items",
+    ),
     path("api/", include(router.urls)),
 ]
