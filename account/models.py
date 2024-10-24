@@ -9,6 +9,7 @@ class User(AbstractBaseUser):
     profile_picture = models.URLField(null=True)
     phone_number = models.CharField(max_length=50, null=True)
     address = models.TextField(null=True, blank=True)
+    address_detail = models.TextField(null=True, blank=True)
     points = models.PositiveIntegerField(default=0)
     kakao_id = models.CharField(max_length=100, null=True, blank=True)
     naver_id = models.CharField(max_length=100, null=True, blank=True)
