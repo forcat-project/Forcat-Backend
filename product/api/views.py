@@ -30,7 +30,11 @@ class ProductViewSet(
 
     def get_queryset(self):
         queryset = super().get_queryset()
+
+        # discount_rate로 정렬을 요구할때만 0보다 큰 값 필터 적용
         ordering = self.request.query_params.get("ordering", None)
+        if ordering == "discount_rate" or ordering == "-discount_rate":
+            queryset = queryset.filter(discount_rate__gt=0)
         if ordering:
             queryset = queryset.order_by(ordering)
         return queryset

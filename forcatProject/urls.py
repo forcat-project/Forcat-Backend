@@ -6,6 +6,8 @@ from rest_framework.permissions import AllowAny
 
 from account.api.kakao_oauth_views import KakaoOauthViewSet
 from account.api.views import CatViewSet
+from account.api.views import UserViewSet
+from product.api.views import ProductViewSet
 from product.api.views import ProductViewSet, CategoryViewSet
 
 schema_view = get_schema_view(
@@ -26,6 +28,7 @@ router = routers.DefaultRouter(trailing_slash=False)
 router.register(r"products", ProductViewSet)
 router.register(r"categories", CategoryViewSet)
 router.register(r"cats", CatViewSet)
+router.register(r"users", UserViewSet)
 
 urlpatterns = [
     path(
