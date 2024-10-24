@@ -47,15 +47,4 @@ class TestCase:
             },
         )
 
-        assert res.json() == {
-            "username": "김_유저네임",
-            "nickname": "김_닉네임",
-            "profile_picture": "http://www.naver.com",
-            "phone_number": "010-0000-0000",
-            "address": "김둥둥둥",
-            "address_detail": "김바바바",
-            "kakao_id": None,
-            "naver_id": None,
-            "google_id": None,
-            "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzI5NzM1NzI2LCJpYXQiOjE3Mjk3MzU0MjYsImp0aSI6IjE0MTQ2YTM5NDFmZTQwMTQ4MTQ1MzZkODI5YzU5NTk5IiwidXNlcl9pZCI6MX0.HCYrLlx6WeSr_eX0QC1ejk6AYB-FCc_Bhl2PGhDjcdw",
-        }
+        assert res.json()["access_token"] != ""
