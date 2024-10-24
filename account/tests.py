@@ -97,6 +97,23 @@ class TestCase:
         access_token = AccessToken.for_user(user)
         assert access_token
 
+    def test_유저_기본_회원가입_테스트(self, api_client):
+        url = "/api/users/sign-up"
+
+        res = api_client.post(
+            url,
+            data={
+                "username": "김_유저네임",
+                "nickname": "김_닉네임",
+                "profile_picture": "http://www.naver.com",
+                "phone_number": "010-0000-0000",
+                "address": "김둥둥둥",
+                "address_detail": "김바바바",
+            },
+        )
+
+        assert res.json()["access_token"] != ""
+
 
 class TestCatCRUD:
     def test_고양이_생성_테스트(self, api_client, 사용자_생성, 고양이_품종_생성):
@@ -213,20 +230,3 @@ class TestCatCRUD:
 
         with pytest.raises(Cat.DoesNotExist):
             Cat.objects.get(cat_id=cat_to_delete.cat_id)
-
-    def test_유저_기본_회원가입_테스트(self, api_client):
-        url = "/api/users/sign-up"
-
-        res = api_client.post(
-            url,
-            data={
-                "username": "김_유저네임",
-                "nickname": "김_닉네임",
-                "profile_picture": "http://www.naver.com",
-                "phone_number": "010-0000-0000",
-                "address": "김둥둥둥",
-                "address_detail": "김바바바",
-            },
-        )
-
-        assert res.json()["access_token"] != ""
