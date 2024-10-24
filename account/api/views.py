@@ -1,3 +1,6 @@
+from rest_framework import viewsets
+from account.models import Cat
+from account.api.serializers import CatSerializer
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -26,3 +29,8 @@ class UserViewSet(viewsets.GenericViewSet):
         response_data["access_token"] = str(access_token)
 
         return Response(response_data, status=status.HTTP_201_CREATED)
+
+
+class CatViewSet(viewsets.ModelViewSet):
+    queryset = Cat.objects.all()
+    serializer_class = CatSerializer
