@@ -29,14 +29,15 @@ class User(AbstractBaseUser):
     def __str__(self):
         return self.username
 
+
 # cat_breed 테이블
 class CatBreed(models.Model):
-    category_id = models.IntegerField(unique=True)
+    category_id = models.IntegerField(primary_key=True)
     breed_type = models.CharField(max_length=255, unique=True)
     rank = models.IntegerField(unique=True)
 
     class Meta:
-        db_table = 'cat_breed'
+        db_table = "cat_breed"
 
     def __str__(self):
         return self.breed_type
@@ -46,15 +47,23 @@ class CatBreed(models.Model):
 class Cat(models.Model):
     cat_id = models.AutoField(primary_key=True)  # 고양이 ID
     name = models.CharField(max_length=255, unique=True)  # 고양이 이름, 중복 X
-    cat_breed = models.ForeignKey(CatBreed, to_field='category_id', on_delete=models.CASCADE)  # 고양이 묘종, 외래키로 category_id와 연결
+    cat_breed = models.ForeignKey(
+        CatBreed, on_delete=models.CASCADE
+    )  # 고양이 묘종, 외래키로 category_id와 연결
     birth_date = models.DateField()
-    gender = models.IntegerField(choices=((0, '여아'), (1, '남아')))  # 성별 (여아: 0, 남: 1)
-    is_neutered = models.IntegerField(choices=((0, '안 했어요'), (1, '했어요')))  # 중성화 여부 (했어요: 0, 안 했어요: 1)
+    gender = models.IntegerField(
+        choices=((0, "여아"), (1, "남아"))
+    )  # 성별 (여아: 0, 남: 1)
+    is_neutered = models.IntegerField(
+        choices=((0, "안 했어요"), (1, "했어요"))
+    )  # 중성화 여부 (했어요: 0, 안 했어요: 1)
     weight = models.DecimalField(max_digits=5, decimal_places=2)  # 몸무게
-    user = models.ForeignKey(User, on_delete=models.CASCADE)  # 유저 ID와 연결 (ForeignKey로 User 테이블과 연결)
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE
+    )  # 유저 ID와 연결 (ForeignKey로 User 테이블과 연결)
 
     class Meta:
-        db_table = 'cat'
+        db_table = "cat"
 
     def __str__(self):
         return self.name
