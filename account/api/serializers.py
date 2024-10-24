@@ -20,8 +20,6 @@ class CatSerializer(serializers.ModelSerializer):
             "days_since_birth",
         ]
 
-    profile_image = serializers.URLField(required=False)
-
     def get_days_since_birth(self, obj):
         if obj.birth_date:
             delta = date.today() - obj.birth_date

@@ -12,7 +12,7 @@ def api_client():
 
 
 @pytest.fixture
-def user(db):
+def 사용자_생성(db):
     return User.objects.create(
         username="testuser",
         nickname="testnickname",
@@ -27,42 +27,42 @@ def user(db):
 
 
 @pytest.fixture
-def cat_breed(db):
+def 고양이_품종_생성(db):
     return CatBreed.objects.create(category_id=1, breed_type="Persian", rank=1)
 
 
 @pytest.fixture
-def 고양이_생성(db, user, cat_breed):
+def 고양이_생성(db, 사용자_생성, 고양이_품종_생성):
     def _여러_고양이_생성():
         return [
             Cat.objects.create(
                 name="Kitty1",
-                cat_breed=cat_breed,
+                cat_breed=고양이_품종_생성,
                 birth_date="2020-01-01",
                 gender=1,
                 is_neutered=1,
                 weight=4.50,
-                user=user,
+                user=사용자_생성,
                 profile_image="http://example.com/profile1.jpg",
             ),
             Cat.objects.create(
                 name="Kitty2",
-                cat_breed=cat_breed,
+                cat_breed=고양이_품종_생성,
                 birth_date="2019-06-15",
                 gender=0,
                 is_neutered=0,
                 weight=5.00,
-                user=user,
+                user=사용자_생성,
                 profile_image="http://example.com/profile2.jpg",
             ),
             Cat.objects.create(
                 name="Kitty3",
-                cat_breed=cat_breed,
+                cat_breed=고양이_품종_생성,
                 birth_date="2018-08-25",
                 gender=1,
                 is_neutered=1,
                 weight=3.80,
-                user=user,
+                user=사용자_생성,
                 profile_image="http://example.com/profile3.jpg",
             ),
         ]
@@ -78,17 +78,17 @@ class TestJWTToken:
 
 
 class TestCatCRUD:
-    def test_고양이_생성_테스트(self, api_client, user, cat_breed):
-        api_client.force_authenticate(user=user)
+    def test_고양이_생성_테스트(self, api_client, 사용자_생성, 고양이_품종_생성):
+        api_client.force_authenticate(user=사용자_생성)
         url = reverse("cat-list")
         data = {
             "name": "NewCat",
-            "cat_breed": cat_breed.category_id,
+            "cat_breed": 고양이_품종_생성.category_id,
             "birth_date": "2021-05-20",
             "gender": 0,
             "is_neutered": 1,
             "weight": 3.20,
-            "user": user.id,
+            "user": 사용자_생성.id,
             "profile_image": "http://example.com/newcat.jpg",
         }
 
@@ -148,8 +148,8 @@ class TestCatCRUD:
             },
         ]
 
-    def test_고양이_업데이트_테스트(self, api_client, user, 고양이_생성):
-        api_client.force_authenticate(user=user)
+    def test_고양이_업데이트_테스트(self, api_client, 사용자_생성, 고양이_생성):
+        api_client.force_authenticate(user=사용자_생성)
         cats = 고양이_생성()
         cat_to_update = cats[0]
         url = reverse("cat-detail", args=[cat_to_update.cat_id])
@@ -161,7 +161,7 @@ class TestCatCRUD:
             "gender": 1,
             "is_neutered": 1,
             "weight": 5.00,
-            "user": user.id,
+            "user": 사용자_생성.id,
             "profile_image": "http://example.com/updated_image.jpg",  # 이미지 URL로 수정
         }
 
@@ -180,8 +180,8 @@ class TestCatCRUD:
             "days_since_birth": 1758,
         }
 
-    def test_고양이_삭제_테스트(self, api_client, user, 고양이_생성):
-        api_client.force_authenticate(user=user)
+    def test_고양이_삭제_테스트(self, api_client, 사용자_생성, 고양이_생성):
+        api_client.force_authenticate(user=사용자_생성)
 
         cats = 고양이_생성()
         cat_to_delete = cats[0]
