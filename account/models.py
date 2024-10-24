@@ -45,11 +45,9 @@ class CatBreed(models.Model):
 
 # cat 테이블
 class Cat(models.Model):
-    cat_id = models.AutoField(primary_key=True)  # 고양이 ID
-    name = models.CharField(max_length=255, unique=True)  # 고양이 이름, 중복 X
-    cat_breed = models.ForeignKey(
-        CatBreed, on_delete=models.CASCADE
-    )  # 고양이 묘종, 외래키로 category_id와 연결
+    cat_id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=255)
+    cat_breed = models.ForeignKey(CatBreed, on_delete=models.CASCADE)
     birth_date = models.DateField()
     gender = models.IntegerField(
         choices=((0, "여아"), (1, "남아"))
@@ -57,10 +55,9 @@ class Cat(models.Model):
     is_neutered = models.IntegerField(
         choices=((0, "안 했어요"), (1, "했어요"))
     )  # 중성화 여부 (했어요: 0, 안 했어요: 1)
-    weight = models.DecimalField(max_digits=5, decimal_places=2)  # 몸무게
-    user = models.ForeignKey(
-        User, on_delete=models.CASCADE
-    )  # 유저 ID와 연결 (ForeignKey로 User 테이블과 연결)
+    weight = models.DecimalField(max_digits=5, decimal_places=2)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    profile_image = models.URLField(max_length=500, null=True, blank=True)
 
     class Meta:
         db_table = "cat"

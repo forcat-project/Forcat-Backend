@@ -16,8 +16,11 @@ class CatSerializer(serializers.ModelSerializer):
             "is_neutered",
             "weight",
             "user",
+            "profile_image",
             "days_since_birth",
         ]
+
+    profile_image = serializers.URLField(required=False)
 
     def get_days_since_birth(self, obj):
         if obj.birth_date:
