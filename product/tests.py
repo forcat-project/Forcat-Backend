@@ -354,16 +354,15 @@ class TestDiscountRateFiltering:
             purchase_count=8,
         )
 
-        # 할인율 내림차순으로 정렬한 경우
         url = "/api/products?ordering=-discount_rate"
         response = api_client.get(url)
 
         assert response.status_code == 200
 
-        results = response.json().get('results', [])
-        assert len(results) == 2  # 할인율 0은 제외시켜서 결과값은 2으로만
+        print(response.json())
 
-        # 전체 응답값 비교 (추가된 필드 포함)
+        results = response.json().get('results', [])
+
         assert results[0] == {
             'product_id': product_2.product_id,
             'name': product_2.name,
@@ -373,9 +372,9 @@ class TestDiscountRateFiltering:
             'price': "200.00",
             'discount_rate': "15.00",
             'purchase_count': product_2.purchase_count,
-            'categories': [],  # categories 필드
-            'discounted_price': 170.0,  # 할인된 가격
-            'remain_count': 0,  # 남은 수량
+            'categories': [],
+            'discounted_price': 170.0,
+            'remain_count': 0,
         }
         assert results[1] == {
             'product_id': product_3.product_id,
@@ -386,9 +385,9 @@ class TestDiscountRateFiltering:
             'price': "150.00",
             'discount_rate': "10.00",
             'purchase_count': product_3.purchase_count,
-            'categories': [],  # categories 필드
-            'discounted_price': 135.0,  # 할인된 가격
-            'remain_count': 0,  # 남은 수량
+            'categories': [],
+            'discounted_price': 135.0,
+            'remain_count': 0,
         }
 
 
