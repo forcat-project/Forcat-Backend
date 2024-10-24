@@ -47,7 +47,7 @@ class KakaoOauthViewSet(APIView):
             auth_token = self._get_auth_token(user_info["id"])
             return redirect(f"{FRONT_END_ENDPOINT}?token={auth_token}")
         return redirect(
-            f'{FRONT_END_ENDPOINT}?id={user_info["id"]}&nickname={user_info["properties"]["nickname"]}&profile_image=${user_info["properties"]["profile_image"]}&'
+            f'{FRONT_END_ENDPOINT}/signup?id={user_info["id"]}&nickname={user_info["properties"]["nickname"]}&profile_image=${user_info["properties"]["profile_image"]}&'
         )
 
     def _get_code_from_request(self, request) -> str:
