@@ -1,9 +1,10 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import AccessToken
 
-from account.api.serializer import UserSerializer
+from account.api.serializer import UserSerializer, FileUploadSerializer
 from account.models import User
 
 
@@ -26,3 +27,12 @@ class UserViewSet(viewsets.GenericViewSet):
         response_data["access_token"] = str(access_token)
 
         return Response(response_data, status=status.HTTP_201_CREATED)
+
+
+class FileUploadView(APIView):
+    def post(self, request, *args, **kwargs):
+        serializer = FileUploadSerializer(data=request.data)
+        if serializer.is_valid():
+            file_data = serializer.save()  # S3에 파일 저장 및 URL 생성
+            return Response(file_data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
