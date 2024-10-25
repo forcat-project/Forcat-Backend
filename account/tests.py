@@ -1,4 +1,5 @@
 import pytest
+from freezegun import freeze_time
 from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import AccessToken
 from django.urls import reverse
@@ -116,6 +117,7 @@ class TestCase:
 
 
 class TestCatCRUD:
+    @freeze_time("2024-10-24")
     def test_고양이_생성_테스트(self, api_client, 사용자_생성, 고양이_품종_생성):
         api_client.force_authenticate(user=사용자_생성)
         url = reverse("cat-list")
@@ -144,6 +146,7 @@ class TestCatCRUD:
             "days_since_birth": 1253,
         }
 
+    @freeze_time("2024-10-24")
     def test_고양이_목록_조회_테스트(self, api_client, 고양이_생성):
         고양이_생성()
         url = reverse("cat-list")
@@ -186,6 +189,7 @@ class TestCatCRUD:
             },
         ]
 
+    @freeze_time("2024-10-24")
     def test_고양이_업데이트_테스트(self, api_client, 사용자_생성, 고양이_생성):
         api_client.force_authenticate(user=사용자_생성)
         cats = 고양이_생성()

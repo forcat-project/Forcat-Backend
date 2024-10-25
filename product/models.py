@@ -1,6 +1,8 @@
 from django.db import models
 from decimal import Decimal
 
+from account.models import User
+
 
 class Product(models.Model):
     product_id = models.IntegerField(primary_key=True)
@@ -56,3 +58,21 @@ class ProductCategory(models.Model):
 
     def __str__(self):
         return f"{self.product.name} in {self.category.name}"
+
+
+class Cart(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    products = models.ManyToManyField(Product, through="CartItem")
+
+    def __str__(self):
+        return f"Cart of {self.user.username}"
+
+
+class CartItem(models.Model):
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=1)
+    added_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.quantity} x {self.product.name}"
