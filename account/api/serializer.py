@@ -10,9 +10,15 @@ from forcatProject import settings
 
 
 class UserSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(read_only=True)
+    kakao_id = serializers.CharField(write_only=True, allow_null=True, required=False)
+    naver_id = serializers.CharField(write_only=True, allow_null=True, required=False)
+    google_id = serializers.CharField(write_only=True, allow_null=True, required=False)
+
     class Meta:
         model = User
         fields = [
+            "id",
             "username",
             "nickname",
             "profile_picture",
@@ -52,3 +58,17 @@ class FileUploadSerializer(serializers.Serializer):
             ExtraArgs={"ContentType": file.content_type},
         )
         return {"file_url": f"https://{settings.AWS_S3_CUSTOM_DOMAIN}/{url}"}
+
+
+class UserUpdateSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = [
+            "username",
+            "nickname",
+            "profile_picture",
+            "phone_number",
+            "address",
+            "address_detail",
+        ]
