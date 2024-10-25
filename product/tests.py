@@ -60,27 +60,42 @@ def 테스트_한글_이름_여러_상품_생성():
     category_1 = Category.objects.create(name="카테고리_1")
     category_2 = Category.objects.create(name="카테고리_2")
 
-    products = [
-        {"id": 1, "name": "고양이_사료_맛있다"},
-        {"id": 2, "name": "고양이_사료_맛없다"},
-        {"id": 3, "name": "고양이 맛있다"},
-    ]
+    product_1 = Product.objects.create(
+        product_id=1,
+        name="고양이_사료_맛있다",
+        company="삼성",
+        thumbnail_url=f"https://url/test_thumbnail.jpg",
+        description_image_url=f"https://url/test_image.jpg",
+        price=Decimal("1000"),
+        discount_rate=Decimal(f"5"),
+        purchase_count=300,
+    )
 
-    for product_data in products:
-        product = Product.objects.create(
-            product_id=product_data["id"],
-            name=product_data["name"],
-            company="삼성",
-            thumbnail_url="https://url/test_thumbnail.jpg",
-            description_image_url="https://url/test_image.jpg",
-            price=Decimal("1000"),
-            discount_rate=Decimal("5"),
-            purchase_count=300,
-        )
-        if product_data["id"] == 1:
-            ProductCategory.objects.create(product=product, category=category_1)
-        else:
-            ProductCategory.objects.create(product=product, category=category_2)
+    product_2 = Product.objects.create(
+        product_id=2,
+        name="고양이_사료_맛없다",
+        company="삼성",
+        thumbnail_url=f"https://url/test_thumbnail.jpg",
+        description_image_url=f"https://url/test_image.jpg",
+        price=Decimal("1000"),
+        discount_rate=Decimal(f"5"),
+        purchase_count=300,
+    )
+
+    product_3 = Product.objects.create(
+        product_id=3,
+        name="고양이 맛있다",
+        company="삼성",
+        thumbnail_url=f"https://url/test_thumbnail.jpg",
+        description_image_url=f"https://url/test_image.jpg",
+        price=Decimal("1000"),
+        discount_rate=Decimal(f"5"),
+        purchase_count=300,
+    )
+
+    ProductCategory.objects.create(product=product_1, category=category_1)
+    ProductCategory.objects.create(product=product_2, category=category_2)
+    ProductCategory.objects.create(product=product_3, category=category_2)
 
 
 @pytest.fixture()
