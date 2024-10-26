@@ -1,5 +1,9 @@
+import time
+
 from django_filters.rest_framework import DjangoFilterBackend
+from django_redis import get_redis_connection
 from rest_framework import viewsets, mixins, status
+from rest_framework.decorators import action
 from rest_framework.pagination import CursorPagination
 from rest_framework.response import Response
 from rest_framework.filters import OrderingFilter
@@ -42,6 +46,39 @@ class ProductViewSet(
         if ordering:
             queryset = queryset.order_by(ordering)
         return queryset
+
+    def list(self, request, *args, **kwargs):
+        # Redis 연결 설정
+        redis_conn = get_redis_connection("default")
+
+        # 'name' 필터가 요청에 포함된 경우 Redis 카운트 증가
+        name_filter = request.query_params.get("name")
+        if name_filter:
+            # 필터링된 검색어로 카운트를 증가시킴
+            redis_conn.zincrby("product_search_count", 1, name_filter)
+
+        return super().list(request, *args, **kwargs)
+
+    @action(methods=["GET"], detail=False, url_path="popular-keywords")
+    def popular_keywords(self, request):
+        redis_conn = get_redis_connection("default")
+
+        product_scores = {}
+        for keyword, score in redis_conn.zrange(
+            "product_search_count", 0, -1, withscores=True
+        ):
+            product_scores[keyword] = score
+        # 검색 카운트 기준으로 정렬하여 상위 상품 반환
+        top_keywords = sorted(product_scores.items(), key=lambda x: x[1], reverse=True)
+
+        return Response(
+            {
+                "product_ids": [
+                    {keyword[0].decode("utf-8"): keyword[1]}
+                    for keyword in top_keywords[:10]
+                ]
+            }
+        )
 
 
 class CategoryViewSet(
