@@ -5,17 +5,18 @@ from rest_framework import routers
 from rest_framework.permissions import AllowAny
 
 from account.api.kakao_oauth_views import KakaoOauthViewSet
+from product.api.views import CartItemViewSet
+from account.api.views import (
+    CatViewSet,
+    FileUploadView,
+    UserViewSet,
+)
 from product.api.views import (
     ProductViewSet,
     CategoryViewSet,
-    CartItemViewSet,
 )
-from account.api.views import CatViewSet
-from account.api.views import UserViewSet, FileUploadView
-from product.api.views import ProductViewSet, CategoryViewSet
-from account.api.views import UserViewSet
 
-
+# Swagger 설정
 schema_view = get_schema_view(
     openapi.Info(
         title="Forcat API",
@@ -29,41 +30,93 @@ schema_view = get_schema_view(
     permission_classes=[AllowAny],
 )
 
+# 기본 라우터
+main_router = routers.DefaultRouter(trailing_slash=False)
+main_router.register("products", ProductViewSet)
+main_router.register("categories", CategoryViewSet)
+main_router.register("users", UserViewSet)
 
-router = routers.DefaultRouter(trailing_slash=False)
-router.register(r"products", ProductViewSet)
-router.register(r"categories", CategoryViewSet)
-router.register(r"cats", CatViewSet)
-router.register(r"users", UserViewSet)
-
-urlpatterns = [
+# 사용자별 리소스 라우트 (cats, cart)
+user_resource_routes = [
+    # 장바구니 라우트
     path(
-        "api/swagger/",
+        "users/<int:user_id>/cart/",
+        include(
+            [
+                path(
+                    "products/<int:products_id>",
+                    CartItemViewSet.as_view(
+                        {
+                            "patch": "partial_update",
+                            "put": "update",
+                            "delete": "destroy",
+                        }
+                    ),
+                    name="user-cart-item",
+                ),
+                path(
+                    "products",
+                    CartItemViewSet.as_view(
+                        {
+                            "get": "list",
+                            "post": "create",
+                        }
+                    ),
+                    name="user-cart-items",
+                ),
+            ]
+        ),
+    ),
+    # 고양이 라우트
+    path(
+        "users/<int:user_id>/cats",
+        include(
+            [
+                path(
+                    "/<int:cat_id>",
+                    CatViewSet.as_view(
+                        {
+                            "get": "retrieve",  # 특정 고양이 조회
+                            "put": "update",  # 고양이 정보 전체 수정
+                            "patch": "partial_update",  # 고양이 정보 부분 수정
+                            "delete": "destroy",  # 고양이 삭제
+                        }
+                    ),
+                    name="user-cat-detail",
+                ),
+                path(
+                    "",
+                    CatViewSet.as_view(
+                        {
+                            "get": "list",  # 사용자의 모든 고양이 조회
+                            "post": "create",  # 새 고양이 등록
+                        }
+                    ),
+                    name="user-cats",
+                ),
+            ]
+        ),
+    ),
+]
+
+# API URL 패턴
+api_v1_patterns = [
+    # API 문서
+    path(
+        "swagger/",
         schema_view.with_ui("swagger", cache_timeout=0),
         name="schema-swagger-ui",
     ),
-    path("api/upload", FileUploadView.as_view(), name="file-upload"),
-    path("api/oauth/kakao", KakaoOauthViewSet.as_view(), name="kakao-oauth-login"),
-    path(
-        "api/users/<int:user_id>/cart/products/<int:products_id>",
-        CartItemViewSet.as_view(
-            {
-                "patch": "partial_update",  # 장바구니 아이템 수정 (부분 업데이트)
-                "put": "update",  # 장바구니 아이템 수정 (전체 업데이트)
-                "delete": "destroy",  # 장바구니 아이템 삭제
-            }
-        ),
-        name="user-cart-item",
-    ),
-    path(
-        "api/users/<int:user_id>/cart/products",
-        CartItemViewSet.as_view(
-            {
-                "get": "list",  # 장바구니 아이템 목록 조회
-                "post": "create",  # 장바구니 아이템 추가
-            }
-        ),
-        name="user-cart-items",
-    ),
-    path("api/", include(router.urls)),
+    # OAuth 관련
+    path("oauth/kakao", KakaoOauthViewSet.as_view(), name="kakao-oauth-login"),
+    # 파일 업로드
+    path("upload", FileUploadView.as_view(), name="file-upload"),
+    # 라우터 포함
+    path("", include(main_router.urls)),
+    path("", include(user_resource_routes)),
+]
+
+# 최상위 URL 패턴
+urlpatterns = [
+    path("api/", include(api_v1_patterns)),
 ]
