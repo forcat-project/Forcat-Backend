@@ -99,6 +99,6 @@ class KakaoOauthViewSet(APIView):
         """
         우리 서버의 auth token을 User의 정보로 가져옵니다.
         """
-        user = User.objects.filter.get(kakao_id=kakao_id)
+        user = User.objects.get(kakao_id=kakao_id)
         access_token = AccessToken.for_user(user)
         return access_token.__str__()
