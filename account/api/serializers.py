@@ -15,7 +15,6 @@ class CatSerializer(serializers.ModelSerializer):
             "gender",
             "is_neutered",
             "weight",
-            "user",
             "profile_image",
             "days_since_birth",
         ]

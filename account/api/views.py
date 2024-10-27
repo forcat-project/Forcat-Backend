@@ -55,3 +55,19 @@ class FileUploadView(APIView):
 class CatViewSet(viewsets.ModelViewSet):
     queryset = Cat.objects.all()
     serializer_class = CatSerializer
+
+    lookup_field = "cat_id"
+    lookup_url_kwarg = "cat_id"
+
+    def get_queryset(self):
+        # URL에서 user_id를 가져와 필터링
+        user_id = self.kwargs.get("user_id")
+        if user_id is not None:
+            return Cat.objects.filter(user_id=user_id)
+        return Cat.objects.none()  # user_id가 없는 경우 빈 쿼리셋 반환
+
+    def perform_create(self, serializer):
+        # URL 경로에서 user_id 가져오기
+        user_id = self.kwargs.get("user_id")
+        # user 필드를 설정하여 인스턴스를 생성
+        serializer.save(user_id=user_id)

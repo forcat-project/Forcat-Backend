@@ -1,12 +1,9 @@
 import pytest
-import requests
-from django.urls import reverse
 from freezegun import freeze_time
 from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import AccessToken
 from django.urls import reverse
 from account.models import Cat, CatBreed, User
-from django.core.files.uploadedfile import SimpleUploadedFile
 
 
 @pytest.fixture(scope="session")
@@ -28,7 +25,7 @@ def 테스트_카카오_가입_유저_생성():
 
 
 @pytest.fixture
-def 사용자_생성(db):
+def 사용자_생성():
     return User.objects.create(
         username="testuser",
         nickname="testnickname",
@@ -43,12 +40,12 @@ def 사용자_생성(db):
 
 
 @pytest.fixture
-def 고양이_품종_생성(db):
+def 고양이_품종_생성():
     return CatBreed.objects.create(category_id=1, breed_type="Persian", rank=1)
 
 
 @pytest.fixture
-def 고양이_생성(db, 사용자_생성, 고양이_품종_생성):
+def 고양이_생성(사용자_생성, 고양이_품종_생성):
     def _여러_고양이_생성():
         return [
             Cat.objects.create(
@@ -157,11 +154,12 @@ class TestCase:
         assert User.objects.filter(kakao_id="naver").exists() is False
 
 
+@pytest.mark.django_db
 class TestCatCRUD:
     @freeze_time("2024-10-24")
     def test_고양이_생성_테스트(self, api_client, 사용자_생성, 고양이_품종_생성):
         api_client.force_authenticate(user=사용자_생성)
-        url = reverse("cat-list")
+        url = reverse("user-cats", kwargs={"user_id": 사용자_생성.id})
         data = {
             "name": "NewCat",
             "cat_breed": 고양이_품종_생성.category_id,
@@ -169,7 +167,6 @@ class TestCatCRUD:
             "gender": 0,
             "is_neutered": 1,
             "weight": 3.20,
-            "user": 사용자_생성.id,
             "profile_image": "http://example.com/newcat.jpg",
         }
 
@@ -182,7 +179,6 @@ class TestCatCRUD:
             "gender": 0,
             "is_neutered": 1,
             "weight": "3.20",
-            "user": 1,
             "profile_image": "http://example.com/newcat.jpg",
             "days_since_birth": 1253,
         }
@@ -190,7 +186,7 @@ class TestCatCRUD:
     @freeze_time("2024-10-24")
     def test_고양이_목록_조회_테스트(self, api_client, 고양이_생성):
         고양이_생성()
-        url = reverse("cat-list")
+        url = reverse("user-cats", kwargs={"user_id": 1})
         response = api_client.get(url)
 
         assert response.status_code == 200
@@ -202,7 +198,6 @@ class TestCatCRUD:
                 "gender": 1,
                 "is_neutered": 1,
                 "weight": "4.50",
-                "user": 1,
                 "profile_image": "http://example.com/profile1.jpg",
                 "days_since_birth": 1758,
             },
@@ -213,7 +208,6 @@ class TestCatCRUD:
                 "gender": 0,
                 "is_neutered": 0,
                 "weight": "5.00",
-                "user": 1,
                 "profile_image": "http://example.com/profile2.jpg",
                 "days_since_birth": 1958,
             },
@@ -224,7 +218,6 @@ class TestCatCRUD:
                 "gender": 1,
                 "is_neutered": 1,
                 "weight": "3.80",
-                "user": 1,
                 "profile_image": "http://example.com/profile3.jpg",
                 "days_since_birth": 2252,
             },
@@ -235,7 +228,10 @@ class TestCatCRUD:
         api_client.force_authenticate(user=사용자_생성)
         cats = 고양이_생성()
         cat_to_update = cats[0]
-        url = reverse("cat-detail", args=[cat_to_update.cat_id])
+        url = reverse(
+            "user-cat-detail",
+            kwargs={"user_id": 사용자_생성.id, "cat_id": cat_to_update.cat_id},
+        )
 
         data = {
             "name": "UpdatedCat",
@@ -244,7 +240,6 @@ class TestCatCRUD:
             "gender": 1,
             "is_neutered": 1,
             "weight": 5.00,
-            "user": 사용자_생성.id,
             "profile_image": "http://example.com/updated_image.jpg",  # 이미지 URL로 수정
         }
 
@@ -258,7 +253,6 @@ class TestCatCRUD:
             "gender": 1,
             "is_neutered": 1,
             "weight": "5.00",
-            "user": 1,
             "profile_image": "http://example.com/updated_image.jpg",
             "days_since_birth": 1758,
         }
@@ -268,7 +262,10 @@ class TestCatCRUD:
 
         cats = 고양이_생성()
         cat_to_delete = cats[0]
-        url = reverse("cat-detail", args=[cat_to_delete.cat_id])
+        url = reverse(
+            "user-cat-detail",
+            kwargs={"user_id": 사용자_생성.id, "cat_id": cat_to_delete.cat_id},
+        )
         response = api_client.delete(url)
         assert response.status_code == 204
         assert Cat.objects.count() == 2
