@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import AccessToken
 
-from account.api.serializer import UserSerializer, FileUploadSerializer
+from account.api.serializer import FileUploadSerializer
 from account.api.serializer import UserSerializer, UserUpdateSerializer
 from account.models import User
 
