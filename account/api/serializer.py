@@ -1,11 +1,12 @@
 import mimetypes
 import uuid
+from datetime import date
 
 import boto3
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from account.models import User
+from account.models import User, Cat, CatBreed
 from forcatProject import settings
 
 
@@ -72,3 +73,31 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             "address",
             "address_detail",
         ]
+
+
+class CatSerializer(serializers.ModelSerializer):
+    days_since_birth = serializers.SerializerMethodField()
+    cat_breed_name = serializers.SerializerMethodField(read_only=True)
+
+    def get_cat_breed_name(self, obj):
+        return obj.cat_breed.breed_type  # 출력 시 cat_breed의 name을 반환
+
+    class Meta:
+        model = Cat
+        fields = [
+            "name",
+            "cat_breed",
+            "cat_breed_name",
+            "birth_date",
+            "gender",
+            "is_neutered",
+            "weight",
+            "profile_image",
+            "days_since_birth",
+        ]
+
+    def get_days_since_birth(self, obj):
+        if obj.birth_date:
+            delta = date.today() - obj.birth_date
+            return delta.days
+        return None

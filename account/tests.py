@@ -175,6 +175,7 @@ class TestCatCRUD:
         assert response.json() == {
             "name": "NewCat",
             "cat_breed": 1,
+            "cat_breed_name": "Persian",
             "birth_date": "2021-05-20",
             "gender": 0,
             "is_neutered": 1,
@@ -194,6 +195,7 @@ class TestCatCRUD:
             {
                 "name": "Kitty1",
                 "cat_breed": 1,
+                "cat_breed_name": "Persian",
                 "birth_date": "2020-01-01",
                 "gender": 1,
                 "is_neutered": 1,
@@ -204,6 +206,7 @@ class TestCatCRUD:
             {
                 "name": "Kitty2",
                 "cat_breed": 1,
+                "cat_breed_name": "Persian",
                 "birth_date": "2019-06-15",
                 "gender": 0,
                 "is_neutered": 0,
@@ -214,6 +217,7 @@ class TestCatCRUD:
             {
                 "name": "Kitty3",
                 "cat_breed": 1,
+                "cat_breed_name": "Persian",
                 "birth_date": "2018-08-25",
                 "gender": 1,
                 "is_neutered": 1,
@@ -235,7 +239,8 @@ class TestCatCRUD:
 
         data = {
             "name": "UpdatedCat",
-            "cat_breed": cat_to_update.cat_breed.category_id,
+            "cat_breed": 1,
+            "cat_breed_name": "Persian",
             "birth_date": "2020-01-01",
             "gender": 1,
             "is_neutered": 1,
@@ -249,6 +254,7 @@ class TestCatCRUD:
         assert response.json() == {
             "name": "UpdatedCat",
             "cat_breed": 1,
+            "cat_breed_name": "Persian",
             "birth_date": "2020-01-01",
             "gender": 1,
             "is_neutered": 1,

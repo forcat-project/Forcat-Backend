@@ -1,13 +1,13 @@
-from account.models import Cat
-from account.api.serializers import CatSerializer
 from rest_framework import viewsets, status, mixins
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import AccessToken
 
+from account.api.serializer import CatSerializer
 from account.api.serializer import FileUploadSerializer
 from account.api.serializer import UserSerializer, UserUpdateSerializer
+from account.models import Cat
 from account.models import User
 
 
