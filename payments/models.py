@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 
 
 # 결제 모델
-class Payment(models.Model):
+class Transaction(models.Model):
     id = models.AutoField(primary_key=True)  # 결제 TX ID
     amount = models.DecimalField(max_digits=10, decimal_places=2)  # 결제 금액
     user = models.ForeignKey(
@@ -23,13 +23,13 @@ class Payment(models.Model):
     receipt_url = models.URLField()  # 결제 영수증 URL
 
     def __str__(self):
-        return f"Payment {self.id} for {self.user.username}"
+        return f"Transaction {self.id} for {self.user.username}"
 
 
 # 환불 모델
 class Refund(models.Model):
     payment = models.ForeignKey(
-        Payment, on_delete=models.CASCADE, related_name="refunds"
+        Transaction, on_delete=models.CASCADE, related_name="refunds"
     )  # 환불 대상 결제와의 관계 (1:N)
     refund_amount = models.DecimalField(max_digits=10, decimal_places=2)  # 환불 금액
     refund_requested_date = models.DateTimeField(auto_now_add=True)  # 환불 요청 일자
@@ -57,7 +57,7 @@ class Order(models.Model):
     id = models.CharField(max_length=255, primary_key=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     payment = models.OneToOneField(
-        Payment, on_delete=models.SET_NULL, null=True, blank=True
+        Transaction, on_delete=models.SET_NULL, null=True, blank=True
     )
     order_date = models.DateTimeField(auto_now_add=True)
     original_amount = models.DecimalField(

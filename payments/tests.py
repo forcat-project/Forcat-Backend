@@ -2,7 +2,7 @@ import pytest
 import json
 from django.urls import reverse
 from django.test import Client
-from payments.models import Order, Payment
+from payments.models import Order, Transaction
 from payments.service import confirm_payment_success, confirm_payment_failure
 from account.models import User
 from unittest.mock import patch

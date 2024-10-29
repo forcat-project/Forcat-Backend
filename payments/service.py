@@ -1,6 +1,6 @@
 # payments/service.py
 
-from payments.models import Payment
+from payments.models import Transaction
 import logging
 
 logger = logging.getLogger(__name__)
@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 def confirm_payment_success(order, response_data):
     try:
         # 결제 성공 처리
-        payment = Payment.objects.create(
+        payment = Transaction.objects.create(
             amount=response_data["totalAmount"],
             user=order.user,
             status="결제 완료",
