@@ -164,7 +164,7 @@ AWS_S3_CUSTOM_DOMAIN = f"{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com"
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://redis:6379/1",  # 'redis_boot' 대신 'redis'로 설정
+        "LOCATION": "redis://127.0.0.1:6379/1",  # 'redis_boot' 대신 'redis'로 설정
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         },
