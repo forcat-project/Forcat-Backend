@@ -10,6 +10,7 @@ from account.api.views import (
     CatViewSet,
     FileUploadView,
     UserViewSet,
+    PointViewSet,
 )
 from product.api.views import (
     ProductViewSet,
@@ -35,64 +36,72 @@ main_router = routers.DefaultRouter(trailing_slash=False)
 main_router.register("products", ProductViewSet)
 main_router.register("categories", CategoryViewSet)
 main_router.register("users", UserViewSet)
+main_router.register("points", PointViewSet, basename="points")
 
 # 사용자별 리소스 라우트 (cats, cart)
 user_resource_routes = [
-    # 장바구니 라우트
     path(
-        "users/<int:user_id>/cart/",
+        "users/<int:user_id>/",
         include(
             [
+                # 장바구니 라우트
                 path(
-                    "products/<int:products_id>",
-                    CartItemViewSet.as_view(
-                        {
-                            "patch": "partial_update",
-                            "put": "update",
-                            "delete": "destroy",
-                        }
+                    "cart",
+                    include(
+                        [
+                            path(
+                                "/products/<int:products_id>",
+                                CartItemViewSet.as_view(
+                                    {
+                                        "patch": "partial_update",
+                                        "put": "update",
+                                        "delete": "destroy",
+                                    }
+                                ),
+                                name="user-cart-item",
+                            ),
+                            path(
+                                "/products",
+                                CartItemViewSet.as_view(
+                                    {
+                                        "get": "list",
+                                        "post": "create",
+                                    }
+                                ),
+                                name="user-cart-items",
+                            ),
+                        ]
                     ),
-                    name="user-cart-item",
                 ),
+                # 고양이 라우트
                 path(
-                    "products",
-                    CartItemViewSet.as_view(
-                        {
-                            "get": "list",
-                            "post": "create",
-                        }
+                    "cats",
+                    include(
+                        [
+                            path(
+                                "/<int:cat_id>",
+                                CatViewSet.as_view(
+                                    {
+                                        "get": "retrieve",  # 특정 고양이 조회
+                                        "put": "update",  # 고양이 정보 전체 수정
+                                        "patch": "partial_update",  # 고양이 정보 부분 수정
+                                        "delete": "destroy",  # 고양이 삭제
+                                    }
+                                ),
+                                name="user-cat-detail",
+                            ),
+                            path(
+                                "",
+                                CatViewSet.as_view(
+                                    {
+                                        "get": "list",  # 사용자의 모든 고양이 조회
+                                        "post": "create",  # 새 고양이 등록
+                                    }
+                                ),
+                                name="user-cats",
+                            ),
+                        ]
                     ),
-                    name="user-cart-items",
-                ),
-            ]
-        ),
-    ),
-    # 고양이 라우트
-    path(
-        "users/<int:user_id>/cats",
-        include(
-            [
-                path(
-                    "/<int:cat_id>",
-                    CatViewSet.as_view(
-                        {
-                            "get": "retrieve",  # 특정 고양이 조회
-                            "put": "update",  # 고양이 정보 전체 수정
-                            "patch": "partial_update",  # 고양이 정보 부분 수정
-                            "delete": "destroy",  # 고양이 삭제
-                        }
-                    ),
-                    name="user-cat-detail",
-                ),
-                path(
-                    "",
-                    CatViewSet.as_view(
-                        {
-                            "get": "list",  # 사용자의 모든 고양이 조회
-                            "post": "create",  # 새 고양이 등록
-                        }
-                    ),
-                    name="user-cats",
                 ),
             ]
         ),

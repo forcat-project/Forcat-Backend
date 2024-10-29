@@ -6,7 +6,7 @@ import boto3
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from account.models import User, Cat, CatBreed
+from account.models import User, Cat, CatBreed, Point
 from forcatProject import settings
 
 
@@ -15,6 +15,7 @@ class UserSerializer(serializers.ModelSerializer):
     kakao_id = serializers.CharField(write_only=True, allow_null=True, required=False)
     naver_id = serializers.CharField(write_only=True, allow_null=True, required=False)
     google_id = serializers.CharField(write_only=True, allow_null=True, required=False)
+    points = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = User
@@ -26,6 +27,7 @@ class UserSerializer(serializers.ModelSerializer):
             "phone_number",
             "address",
             "address_detail",
+            "points",
             "kakao_id",
             "naver_id",
             "google_id",
@@ -101,3 +103,20 @@ class CatSerializer(serializers.ModelSerializer):
             delta = date.today() - obj.birth_date
             return delta.days
         return None
+
+
+class PointSerializer(serializers.ModelSerializer):
+    user_id = serializers.CharField()
+
+    class Meta:
+        model = Point
+        fields = ["user_id", "point_id", "point"]
+
+    def create(self, validated_data):
+        user_id = validated_data["user_id"]
+        user = User.objects.get(id=user_id)
+        return Point.objects.create(
+            user=user,
+            point_id=validated_data["point_id"],
+            point=validated_data["point"],
+        )

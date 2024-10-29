@@ -1,3 +1,5 @@
+import uuid
+
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import AbstractUser
 from django.db import models
@@ -10,7 +12,6 @@ class User(AbstractBaseUser):
     phone_number = models.CharField(max_length=50, null=True)
     address = models.TextField(null=True, blank=True)
     address_detail = models.TextField(null=True, blank=True)
-    points = models.PositiveIntegerField(default=0)
     kakao_id = models.CharField(max_length=100, null=True, blank=True)
     naver_id = models.CharField(max_length=100, null=True, blank=True)
     google_id = models.CharField(max_length=100, null=True, blank=True)
@@ -18,6 +19,16 @@ class User(AbstractBaseUser):
     # USERNAME_FIELD을 username으로 설정
     USERNAME_FIELD = "nickname"
     REQUIRED_FIELDS = ["username"]  # 필수 필드 추가
+
+    @property
+    def points(self):
+        # user_id가 본인인 모든 Point 객체의 point 필드를 합산
+        return (
+            Point.objects.filter(user_id=self).aggregate(total=models.Sum("point"))[
+                "total"
+            ]
+            or 0
+        )
 
     @property
     def is_authenticated(self) -> bool:
@@ -50,12 +61,8 @@ class Cat(models.Model):
     name = models.CharField(max_length=255)
     cat_breed = models.ForeignKey(CatBreed, on_delete=models.CASCADE)
     birth_date = models.DateField()
-    gender = models.IntegerField(
-        choices=((0, "여아"), (1, "남아"))
-    )  # 성별 (여아: 0, 남: 1)
-    is_neutered = models.IntegerField(
-        choices=((0, "안 했어요"), (1, "했어요"))
-    )  # 중성화 여부 (했어요: 0, 안 했어요: 1)
+    gender = models.IntegerField(choices=((0, "여아"), (1, "남아")))
+    is_neutered = models.IntegerField(choices=((0, "안 했어요"), (1, "했어요")))
     weight = models.DecimalField(max_digits=5, decimal_places=2)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     profile_image = models.URLField(max_length=500, null=True, blank=True)
@@ -65,3 +72,9 @@ class Cat(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Point(models.Model):
+    point_id = models.CharField(primary_key=True, max_length=255)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    point = models.IntegerField(default=0)
