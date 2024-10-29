@@ -4,11 +4,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import AccessToken
 
-from account.api.serializer import CatSerializer
+from account.api.serializer import CatSerializer, PointSerializer
 from account.api.serializer import FileUploadSerializer
 from account.api.serializer import UserSerializer, UserUpdateSerializer
 from account.models import Cat
 from account.models import User
+from account.services import PointService
 
 
 class UserViewSet(
@@ -71,3 +72,36 @@ class CatViewSet(viewsets.ModelViewSet):
         user_id = self.kwargs.get("user_id")
         # user 필드를 설정하여 인스턴스를 생성
         serializer.save(user_id=user_id)
+
+
+class PointViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
+    serializer_class = PointSerializer
+    point_service = PointService()
+
+    @action(methods=["GET"], detail=False, url_path="random-point")
+    def get_random_point(self, request):
+        hash_key, point = self.point_service.get_random_point_hash()
+        if hash_key:
+            return Response(data={hash_key: point})
+        return Response(data={})
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        point_id = str(serializer.validated_data["point_id"])
+        point_value = serializer.validated_data["point"]
+
+        # Redis에서 point_id 확인
+        if not self.point_service.is_available_hash(point_id, point_value):
+            return Response(
+                {"error": "Point ID is not available"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # 유효성 검사 후 모델 인스턴스 생성
+        serializer.save()
+
+        # Redis에서 사용된 키값 삭제
+        self.point_service.delete_hashed_point(point_id)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)

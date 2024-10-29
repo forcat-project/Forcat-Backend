@@ -1,9 +1,12 @@
+import uuid
+
 import pytest
+from django_redis import get_redis_connection
 from freezegun import freeze_time
 from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import AccessToken
 from django.urls import reverse
-from account.models import Cat, CatBreed, User
+from account.models import Cat, CatBreed, User, Point
 
 
 @pytest.fixture(scope="session")
@@ -32,7 +35,6 @@ def 사용자_생성():
         profile_picture="http://example.com/profile.jpg",
         phone_number="010-1234-5678",
         address="123 Main St, City, Country",
-        points=100,
         kakao_id="kakao123",
         naver_id="naver123",
         google_id="google123",
@@ -83,6 +85,14 @@ def 고양이_생성(사용자_생성, 고양이_품종_생성):
     return _여러_고양이_생성
 
 
+@pytest.fixture
+def 포인트_생성(사용자_생성):
+    Point.objects.create(point_id="1", user=사용자_생성, point=100)
+    Point.objects.create(point_id="2", user=사용자_생성, point=500)
+    Point.objects.create(point_id="3", user=사용자_생성, point=1000)
+    Point.objects.create(point_id="4", user=사용자_생성, point=5000)
+
+
 class TestJWTToken:
     def test_JWT_토큰_발급_테스트(self):
         user = User(username="username", nickname="nickname")
@@ -123,6 +133,7 @@ class TestCase:
             "id": 1,
             "username": "카카오_유저",
             "nickname": "카카오_닉네임",
+            "points": 0,
             "profile_picture": "http://kakao.com",
             "phone_number": "010-0000-1000",
             "address": "카카오_사옥",
@@ -278,3 +289,28 @@ class TestCatCRUD:
 
         with pytest.raises(Cat.DoesNotExist):
             Cat.objects.get(cat_id=cat_to_delete.cat_id)
+
+
+@pytest.mark.django_db
+class TestPoint:
+    def test_포인트를_가진_사용자_조회(self, api_client, 사용자_생성, 포인트_생성):
+        url = reverse("user-detail", kwargs={"pk": 사용자_생성.id})
+
+        res = api_client.get(url)
+
+        assert res.json() == {
+            "id": 1,
+            "username": "testuser",
+            "nickname": "testnickname",
+            "profile_picture": "http://example.com/profile.jpg",
+            "phone_number": "010-1234-5678",
+            "address": "123 Main St, City, Country",
+            "address_detail": None,
+            "points": 6600,
+        }
+
+    def test_랜덤_포인트_생성(self, api_client, 사용자_생성):
+        redis_cache = get_redis_connection("default")
+        hash_key = uuid.uuid1().hex
+        value = 100
+        redis_cache.set(hash_key, value, 300)
