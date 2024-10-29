@@ -12,8 +12,7 @@ from product.api.views import (
 )
 from account.api.views import CatViewSet
 from account.api.views import UserViewSet, FileUploadView
-from product.api.views import ProductViewSet, CategoryViewSet
-from account.api.views import UserViewSet
+from payments.views import confirm_payment, create_order
 
 
 schema_view = get_schema_view(
@@ -65,5 +64,7 @@ urlpatterns = [
         ),
         name="user-cart-items",
     ),
+    path("api/payments/confirm", confirm_payment, name="confirm_payment"),
+    path("api/payments/create_order", create_order, name="create_order"),
     path("api/", include(router.urls)),
 ]

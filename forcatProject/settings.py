@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     ###
     "product",
     "account",
+    "payments",
 ]
 
 MIDDLEWARE = [
@@ -68,7 +69,7 @@ ROOT_URLCONF = "forcatProject.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -151,6 +152,7 @@ KAKAO_REDIRECT_URI = os.getenv("KAKAO_REDIRECT_URI")
 KAKAO_CLIENT_SECRET = os.getenv("KAKAO_CLIENT_SECRET")
 FRONT_END_ENDPOINT = os.getenv("FRONT_END_ENDPOINT")
 TOSS_SECRET_KEY = os.getenv("TOSS_SECRET_KEY")
+TOSS_CONFIRM_API_URL = "https://api.tosspayments.com/v1/payments/confirm"
 
 
 # for upload s3 image

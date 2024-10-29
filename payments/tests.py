@@ -1,3 +1,189 @@
-from django.test import TestCase
+import pytest
+import json
+from django.urls import reverse
+from django.test import Client
+from payments.models import Order, Payment
+from payments.service import confirm_payment_success, confirm_payment_failure
+from account.models import User
+from unittest.mock import patch
 
-# Create your tests here.
+
+@pytest.fixture
+def client():
+    return Client()
+
+
+@pytest.fixture
+def test_유저():
+    # 테스트용 유저 생성
+    return User.objects.create(
+        username="테스트유저",
+        nickname="testnickname",
+        password="password",
+        points=1000,  # 초기 포인트 설정
+    )
+
+
+@pytest.mark.django_db
+def test_주문_생성_성공(client, test_유저):
+    # create_order 테스트
+    url = reverse("create_order")
+    주문_데이터 = {
+        "orderId": "test_order_123",
+        "originalAmount": 5000,
+        "finalAmount": 4000,
+        "pointsUsed": 1000,
+        "amount": 4000,
+        "userId": test_유저.id,
+        "shippingAddress": "서울시 강남구...",
+        "shippingMemo": "부재시 문 앞에 놔둬주세요!",
+        "paymentMethod": "card",
+    }
+    response = client.post(
+        url, data=json.dumps(주문_데이터), content_type="application/json"
+    )
+
+    # 상태 코드가 200인지 확인
+    assert response.status_code == 200
+    # 응답에 "주문이 생성되었습니다" 메시지가 포함되어 있는지 확인
+    response_data = response.json()
+    assert response_data["status"] == "주문이 생성되었습니다"
+    assert response_data["orderId"] == "test_order_123"
+
+
+@pytest.mark.django_db
+@patch("payments.views.requests.post")
+def test_결제_확인_성공(mock_post, client, test_유저):
+    # 주문 생성
+    order = Order.objects.create(
+        id="test_order_123",
+        user=test_유저,
+        total_amount=4000,
+        original_amount=5000,
+        shipping_address="서울시 강남구...",
+        payment_method="card",
+        shipping_status="결제 대기중",
+        shipping_memo="부재시 문 앞에 놔둬주세요!",
+        points_used=1000,
+    )
+
+    # Mocked response 설정
+    mock_response = {
+        "status": "DONE",
+        "lastTransactionKey": "mock_transaction_key",
+        "receipt": {"url": "https://mock.receipt.url"},
+        "totalAmount": 4000,
+        "method": "card",
+    }
+    mock_post.return_value.status_code = 200
+    mock_post.return_value.json.return_value = mock_response
+
+    # confirm_payment 테스트
+    url = reverse("confirm_payment")
+    결제_데이터 = {
+        "paymentKey": "test_payment_key_123",
+        "orderId": "test_order_123",
+        "amount": 4000,
+    }
+    response = client.post(
+        url, data=json.dumps(결제_데이터), content_type="application/json"
+    )
+
+    # 상태 코드가 200인지 확인
+    assert response.status_code == 200
+    # 응답 데이터가 결제 성공 상태인지 확인
+    response_data = response.json()
+    assert response_data["status"] == "결제 완료"
+
+
+@pytest.mark.django_db
+def test_주문_생성_매개변수_누락(client):
+    # 필수 매개변수 누락 시도
+    url = reverse("create_order")
+    불완전한_데이터 = {
+        "orderId": "test_order_123",
+        # "amount"와 "userId"가 누락됨
+        "shippingAddress": "서울시 강남구...",
+    }
+    response = client.post(
+        url, data=json.dumps(불완전한_데이터), content_type="application/json"
+    )
+
+    # 상태 코드가 400인지 확인
+    assert response.status_code == 400
+    # 오류 메시지가 포함되어 있는지 확인
+    response_data = response.json()
+    assert response_data["error"] == "필요한 매개변수가 누락되었습니다."
+
+
+@pytest.mark.django_db
+def test_결제_성공_확인(test_유저):
+    # 주문 생성
+    order = Order.objects.create(
+        id="test_order_123",
+        user=test_유저,
+        total_amount=4000,
+        original_amount=5000,
+        shipping_address="서울시 강남구...",
+        payment_method="card",
+        shipping_status="결제 대기중",
+        shipping_memo="부재시 문 앞에 놔둬주세요!",
+        points_used=1000,
+    )
+
+    # 결제 성공 데이터 설정
+    response_data = {
+        "totalAmount": 4000,
+        "lastTransactionKey": "mock_transaction_key",
+        "receipt": {"url": "https://mock.receipt.url"},
+        "method": "card",
+    }
+
+    # 결제 성공 함수 호출
+    result = confirm_payment_success(order, response_data)
+
+    # 결과 검증
+    assert result["status"] == "결제 완료"
+    assert result["order_info"]["order_id"] == "test_order_123"
+    assert result["order_info"]["shipping_status"] == "배송 준비중"
+    assert result["order_info"]["payment_method"] == "card"
+
+    # 결제 정보 검증
+    payment = Payment.objects.get(pg_tx_id="mock_transaction_key")
+    assert payment.amount == 4000
+    assert payment.user == test_유저
+    assert payment.status == "결제 완료"
+    assert payment.receipt_url == "https://mock.receipt.url"
+
+
+@pytest.mark.django_db
+def test_결제_실패_확인(test_유저):
+    # 주문 생성
+    order = Order.objects.create(
+        id="test_order_123",
+        user=test_유저,
+        total_amount=4000,
+        original_amount=5000,
+        shipping_address="서울시 강남구...",
+        payment_method="card",
+        shipping_status="결제 대기중",
+        shipping_memo="부재시 문 앞에 놔둬주세요!",
+        points_used=1000,
+    )
+
+    # 결제 실패 데이터 설정
+    response_data = {
+        "code": "PAYMENT_FAILED",
+        "message": "결제 승인에 실패하였습니다.",
+    }
+
+    # 결제 실패 함수 호출
+    result = confirm_payment_failure(order, response_data)
+
+    # 결과 검증
+    assert result["code"] == "PAYMENT_FAILED"
+    assert result["message"] == "결제 승인에 실패하였습니다."
+
+    # 주문 상태 검증
+    order.refresh_from_db()
+    assert order.shipping_status == "결제 실패"
