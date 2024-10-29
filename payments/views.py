@@ -3,7 +3,7 @@ import base64
 import json
 from django.conf import settings
 from django.http import JsonResponse
-from payments.models import Order
+from payments.models import Order, ProductOrder
 from django.views.decorators.csrf import csrf_exempt
 from payments.service import confirm_payment_success, confirm_payment_failure
 from account.models import User
@@ -43,7 +43,8 @@ def create_order(request):
         shipping_address = data.get("shippingAddress")
         shipping_memo = data.get("shippingMemo")
         payment_method = data.get("paymentMethod")
-
+        products = data.get("products", [])
+        print(products)
         # 입력 데이터 유효성 검사
         if not all([order_id, amount, user_id]):
             return JsonResponse(
@@ -67,8 +68,15 @@ def create_order(request):
             shipping_memo=shipping_memo,
             points_used=points_used,
         )
+        for product in products:
+            ProductOrder.objects.create(
+                product_name=product["product_name"],
+                price=product["price"],
+                quantity=product["quantity"],
+                order=order,
+            )
+        logger.info("모든 제품이 성공적으로 저장되었습니다.")
 
-        logger.info(f"주문이 성공적으로 생성되었습니다: {order.id}")
         return JsonResponse({"status": "주문이 생성되었습니다", "orderId": order.id})
 
     except json.JSONDecodeError:
@@ -104,6 +112,7 @@ def confirm_payment(request):
         logger.error(f"{ERROR_MESSAGES['order_not_found']}: {order_id}")
         return JsonResponse({"error": ERROR_MESSAGES["order_not_found"]}, status=404)
 
+    # 결제 금액 검증: total_amount와 비교
     if float(order.total_amount) != amount:
         logger.error(
             f"{ERROR_MESSAGES['amount_mismatch']}: 예상 금액 {order.total_amount}, 실제 금액 {amount}"
