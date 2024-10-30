@@ -78,6 +78,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
 
 
 class CatSerializer(serializers.ModelSerializer):
+    cat_id = serializers.IntegerField(read_only=True)
     days_since_birth = serializers.SerializerMethodField()
     cat_breed_name = serializers.SerializerMethodField(read_only=True)
 
@@ -87,6 +88,7 @@ class CatSerializer(serializers.ModelSerializer):
     class Meta:
         model = Cat
         fields = [
+            "cat_id",
             "name",
             "cat_breed",
             "cat_breed_name",

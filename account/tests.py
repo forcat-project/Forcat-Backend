@@ -184,6 +184,7 @@ class TestCatCRUD:
         response = api_client.post(url, data, format="json")
         assert response.status_code == 201
         assert response.json() == {
+            "cat_id": 1,
             "name": "NewCat",
             "cat_breed": 1,
             "cat_breed_name": "Persian",
@@ -204,6 +205,7 @@ class TestCatCRUD:
         assert response.status_code == 200
         assert response.json() == [
             {
+                "cat_id": 1,
                 "name": "Kitty1",
                 "cat_breed": 1,
                 "cat_breed_name": "Persian",
@@ -215,6 +217,7 @@ class TestCatCRUD:
                 "days_since_birth": 1758,
             },
             {
+                "cat_id": 2,
                 "name": "Kitty2",
                 "cat_breed": 1,
                 "cat_breed_name": "Persian",
@@ -226,6 +229,7 @@ class TestCatCRUD:
                 "days_since_birth": 1958,
             },
             {
+                "cat_id": 3,
                 "name": "Kitty3",
                 "cat_breed": 1,
                 "cat_breed_name": "Persian",
@@ -249,6 +253,7 @@ class TestCatCRUD:
         )
 
         data = {
+            "cat_id": 1,
             "name": "UpdatedCat",
             "cat_breed": 1,
             "cat_breed_name": "Persian",
@@ -263,6 +268,7 @@ class TestCatCRUD:
 
         assert response.status_code == 200
         assert response.json() == {
+            "cat_id": 1,
             "name": "UpdatedCat",
             "cat_breed": 1,
             "cat_breed_name": "Persian",
