@@ -112,7 +112,7 @@ class CartItemViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         user_id = self.kwargs.get("user_id")
-        cart = Cart.objects.get(user_id=user_id)
+        cart = Cart.objects.get_or_create(user_id=user_id)
 
         product_id = request.data.get("product_id")
         quantity = request.data.get("quantity")
@@ -133,7 +133,7 @@ class CartItemViewSet(viewsets.ModelViewSet):
         user_id = self.kwargs.get("user_id")
         product_id = self.kwargs.get("products_id")
 
-        cart = Cart.objects.get(user_id=user_id)
+        cart = Cart.objects.get_or_create(user_id=user_id)
         cart_item = CartItem.objects.get(cart_id=cart.id, product_id=product_id)
 
         serializer = self.get_serializer(
@@ -153,7 +153,7 @@ class CartItemViewSet(viewsets.ModelViewSet):
 
         # 해당 user_id의 장바구니에서 product_id에 해당하는 상품을 찾음
         try:
-            cart = Cart.objects.get(user_id=user_id)
+            cart = Cart.objects.get_or_create(user_id=user_id)
             cart_item = CartItem.objects.get(cart_id=cart.id, product_id=product_id)
             cart_item.delete()  # 장바구니 아이템 삭제
             return Response(status=status.HTTP_204_NO_CONTENT)
