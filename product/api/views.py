@@ -8,7 +8,6 @@ from rest_framework.pagination import CursorPagination
 from rest_framework.response import Response
 from rest_framework.filters import OrderingFilter
 
-from account.models import User
 from product.api.filter import ProductFilter
 from product.api.serializer import (
     ProductSerializer,
@@ -113,13 +112,22 @@ class CartItemViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         user_id = self.kwargs.get("user_id")
-        serializer = self.get_serializer(
-            data=request.data, context={"user_id": user_id}
-        )
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
+        cart = Cart.objects.get(user_id=user_id)
 
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        product_id = request.data.get("product_id")
+        quantity = request.data.get("quantity")
+
+        cart_item, created = CartItem.objects.get_or_create(
+            cart=cart, product_id=product_id, defaults={"quantity": quantity}
+        )
+
+        if not created:
+            cart_item.quantity += quantity
+            cart_item.save()
+
+        return Response(
+            CartItemReadSerializer(cart_item).data, status=status.HTTP_201_CREATED
+        )
 
     def update(self, request, *args, **kwargs):
         user_id = self.kwargs.get("user_id")
