@@ -13,7 +13,7 @@ from account.services import PointService
 
 
 class UserViewSet(
-    viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins.UpdateModelMixin
+    viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin
 ):
     queryset = User.objects.all()
     serializer_class = UserSerializer
