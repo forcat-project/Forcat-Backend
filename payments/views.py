@@ -7,20 +7,10 @@ from payments.models import Order, ProductOrder
 from django.views.decorators.csrf import csrf_exempt
 from payments.service import confirm_payment_success, confirm_payment_failure
 from account.models import User
+from payments.constants import ERROR_MESSAGES
 import logging
 
 logger = logging.getLogger(__name__)
-
-# 응답 메시지 상수화
-ERROR_MESSAGES = {
-    "missing_parameters": "필요한 매개변수가 누락되었습니다.",
-    "user_not_found": "유저를 찾을 수 없습니다.",
-    "invalid_json": "잘못된 JSON 형식입니다.",
-    "order_not_found": "주문을 찾을 수 없습니다.",
-    "amount_mismatch": "금액 불일치",
-    "payment_failed": "결제 확인에 실패했습니다.",
-    "invalid_request_method": "잘못된 요청 방식입니다.",
-}
 
 
 @csrf_exempt
@@ -36,7 +26,6 @@ def create_order(request):
 
         order_id = data.get("orderId")
         original_amount = data.get("originalAmount")
-        # total_amount = data.get("totalAmount")
         points_used = data.get("pointsUsed")
         amount = data.get("amount")
         user_id = data.get("userId")
@@ -44,7 +33,6 @@ def create_order(request):
         shipping_memo = data.get("shippingMemo")
         payment_method = data.get("paymentMethod")
         products = data.get("products", [])
-        print(products)
         # 입력 데이터 유효성 검사
         if not all([order_id, amount, user_id]):
             return JsonResponse(
@@ -112,12 +100,19 @@ def confirm_payment(request):
         logger.error(f"{ERROR_MESSAGES['order_not_found']}: {order_id}")
         return JsonResponse({"error": ERROR_MESSAGES["order_not_found"]}, status=404)
 
-    # 결제 금액 검증: total_amount와 비교
-    if float(order.total_amount) != amount:
+    # 결제 금액 검증
+    expected_total_amount = order.original_amount - order.points_used
+    if expected_total_amount != order.total_amount:
         logger.error(
-            f"{ERROR_MESSAGES['amount_mismatch']}: 예상 금액 {order.total_amount}, 실제 금액 {amount}"
+            f"{ERROR_MESSAGES['amount_mismatch']}: 예상 금액 {expected_total_amount}, 실제 결제 금액 {order.total_amount}"
         )
-        return JsonResponse({"error": ERROR_MESSAGES["amount_mismatch"]}, status=400)
+        return JsonResponse(
+            {
+                "error_code": "amount_mismatch",
+                "error_message": ERROR_MESSAGES["amount_mismatch"],
+            },
+            status=400,
+        )
 
     # Toss Payments 인증 헤더 생성
     secret_key = settings.TOSS_SECRET_KEY
@@ -138,6 +133,7 @@ def confirm_payment(request):
         if response.status_code == 200:
             # 결제 성공 처리
             result = confirm_payment_success(order, response_data)
+            print(result)
             return JsonResponse(result)
         else:
             # 결제 실패 시 처리
