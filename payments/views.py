@@ -68,8 +68,10 @@ def create_order(request):
                 order=order,
                 product_id=product["product_id"],
                 discount_rate=product.get("discount_rate", 0),
+                product_company=product.get("product_company", "포캣"),
             )
         logger.info("모든 제품이 성공적으로 저장되었습니다.")
+        return JsonResponse({"status": "주문이 생성되었습니다", "orderId": order.id})
 
     except json.JSONDecodeError:
         return JsonResponse({"error": ERROR_MESSAGES["invalid_json"]}, status=400)

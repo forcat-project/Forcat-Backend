@@ -116,6 +116,7 @@ class ProductOrder(models.Model):
         max_digits=5, decimal_places=2, default=0.00
     )
     product_id = models.IntegerField()
+    product_company = models.CharField(max_length=255)
 
     def __str__(self):
         return f"{self.quantity}x {self.product_name} for Order {self.order.id}"
