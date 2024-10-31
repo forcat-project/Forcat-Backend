@@ -32,9 +32,11 @@ def create_order(request):
         shipping_address = data.get("shippingAddress")
         shipping_memo = data.get("shippingMemo")
         payment_method = data.get("paymentMethod")
+        user_name = data.get("userName")
+        phone_number = data.get("phoneNumber")
         products = data.get("products", [])
         # 입력 데이터 유효성 검사
-        if not all([order_id, amount, user_id]):
+        if not all([order_id, amount, user_id, user_name, phone_number]):
             return JsonResponse(
                 {"error": ERROR_MESSAGES["missing_parameters"]}, status=400
             )
@@ -48,6 +50,8 @@ def create_order(request):
         order = Order.objects.create(
             id=order_id,
             user=user,
+            user_name=user_name,
+            phone_number=phone_number,
             total_amount=amount,
             original_amount=original_amount,
             shipping_address=shipping_address,
@@ -62,10 +66,10 @@ def create_order(request):
                 price=product["price"],
                 quantity=product["quantity"],
                 order=order,
+                product_id=product["product_id"],
+                discount_rate=product.get("discount_rate", 0),
             )
         logger.info("모든 제품이 성공적으로 저장되었습니다.")
-
-        return JsonResponse({"status": "주문이 생성되었습니다", "orderId": order.id})
 
     except json.JSONDecodeError:
         return JsonResponse({"error": ERROR_MESSAGES["invalid_json"]}, status=400)

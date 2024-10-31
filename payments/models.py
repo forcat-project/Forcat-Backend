@@ -65,6 +65,9 @@ class Order(models.Model):
     )
     points_used = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    user_name = models.CharField(max_length=255, blank=False, null=False, default="Anonymous")  # 사용자 이름
+    phone_number = models.CharField(max_length=15, blank=False, null=False, default="000-0000-0000") # 전화번호
+    shipping_address_detail = models.CharField(max_length=255, blank=True, null=True)  # 상세 배송지
     payment_method = models.CharField(
         max_length=20,
         choices=[
@@ -79,7 +82,7 @@ class Order(models.Model):
             ("other", "기타"),
         ],
     )
-    shipping_address = models.CharField(max_length=255)
+    shipping_address = models.CharField(max_length=255, blank=True, null=True)
     shipping_status = models.CharField(
         max_length=30,
         default="preparing",
@@ -109,6 +112,10 @@ class ProductOrder(models.Model):
     order = models.ForeignKey(
         Order, on_delete=models.CASCADE
     )  # 주문내역 ID (Many-to-One 관계)
+    discount_rate = models.DecimalField(
+        max_digits=5, decimal_places=2, default=0.00
+    )
+    product_id = models.IntegerField()
 
     def __str__(self):
         return f"{self.quantity}x {self.product_name} for Order {self.order.id}"
