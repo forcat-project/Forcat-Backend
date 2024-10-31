@@ -12,9 +12,9 @@ class User(AbstractBaseUser):
     phone_number = models.CharField(max_length=50, null=True)
     address = models.TextField(null=True, blank=True)
     address_detail = models.TextField(null=True, blank=True)
-    kakao_id = models.CharField(max_length=100, null=True, blank=True)
-    naver_id = models.CharField(max_length=100, null=True, blank=True)
-    google_id = models.CharField(max_length=100, null=True, blank=True)
+    kakao_id = models.CharField(max_length=100, null=True, blank=True, unique=True)
+    naver_id = models.CharField(max_length=100, null=True, blank=True, unique=True)
+    google_id = models.CharField(max_length=100, null=True, blank=True, unique=True)
 
     # USERNAME_FIELD을 username으로 설정
     USERNAME_FIELD = "nickname"
