@@ -85,6 +85,7 @@ WSGI_APPLICATION = "forcatProject.wsgi.application"
 
 AUTH_USER_MODEL = "account.User"
 CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_CREDENTIALS = True
 ALLOWED_HOSTS = ["*"]
 
 # Database
