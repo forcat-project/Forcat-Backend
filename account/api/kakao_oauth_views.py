@@ -46,10 +46,8 @@ class KakaoOauthViewSet(APIView):
         if self._is_user_exists(user_info["id"]):
             auth_token = self._get_auth_token(user_info["id"])
 
-            response = redirect(f"{FRONT_END_ENDPOINT}/login")
-            response.set_cookie(
-                "access_token", auth_token, max_age=1000, samesite="None", secure=True
-            )  # HTTPS에서만 쿠키 전송
+            response = redirect(f"{FRONT_END_ENDPOINT}/login?access_token={auth_token}")
+            response.set_cookie("access_token", auth_token, max_age=1000)
             return response
         return redirect(
             f'{FRONT_END_ENDPOINT}/signup?kakao_id={user_info["id"]}&username={user_info["properties"]["nickname"]}&profile_image=${user_info["properties"]["profile_image"]}&'
