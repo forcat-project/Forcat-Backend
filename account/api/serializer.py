@@ -12,10 +12,15 @@ from forcatProject import settings
 
 class UserSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(read_only=True)
-    kakao_id = serializers.CharField(write_only=True, allow_null=True, required=False)
-    naver_id = serializers.CharField(write_only=True, allow_null=True, required=False)
-    google_id = serializers.CharField(write_only=True, allow_null=True, required=False)
-    points = serializers.IntegerField(read_only=True)
+    kakao_id = serializers.CharField(
+        write_only=True, allow_null=True, allow_blank=True, required=False
+    )
+    naver_id = serializers.CharField(
+        write_only=True, allow_null=True, allow_blank=True, required=False
+    )
+    google_id = serializers.CharField(
+        write_only=True, allow_null=True, allow_blank=True, required=False
+    )
 
     class Meta:
         model = User

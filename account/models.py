@@ -9,7 +9,7 @@ class User(AbstractBaseUser):
     username = models.CharField(max_length=50)
     nickname = models.CharField(max_length=50, unique=True)
     profile_picture = models.URLField(null=True)
-    phone_number = models.CharField(max_length=50, null=True)
+    phone_number = models.CharField(max_length=50, null=True, blank=True)
     address = models.TextField(null=True, blank=True)
     address_detail = models.TextField(null=True, blank=True)
     kakao_id = models.CharField(max_length=100, null=True, blank=True, unique=True)
