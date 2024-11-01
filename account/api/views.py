@@ -1,5 +1,6 @@
 from rest_framework import viewsets, status, mixins
 from rest_framework.decorators import action
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import AccessToken
@@ -10,10 +11,14 @@ from account.api.serializer import UserSerializer, UserUpdateSerializer
 from account.models import Cat
 from account.models import User
 from account.services import PointService
+from forcatProject.permissions import IsUserMatching
 
 
 class UserViewSet(
-    viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin
+    viewsets.GenericViewSet,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
 ):
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -21,14 +26,22 @@ class UserViewSet(
     default_serializer_class = UserSerializer  # 기본 직렬화기
     update_serializer_class = UserUpdateSerializer  # 업데이트에 사용할 직렬화기
 
+    permission_classes = [IsUserMatching]
+
     def get_serializer_class(self):
         # 'update', 'partial_update' 요청일 때 다른 serializer 사용
         if self.action in ["update", "partial_update"]:
             return self.update_serializer_class
         return self.default_serializer_class
 
-    @action(methods=["POST"], detail=False, url_path="sign-up")
+    @action(
+        methods=["POST"],
+        detail=False,
+        url_path="sign-up",
+        permission_classes=[AllowAny],
+    )
     def sign_up(self, request):
+
         # 유저 생성 처리
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -59,6 +72,8 @@ class CatViewSet(viewsets.ModelViewSet):
 
     lookup_field = "cat_id"
     lookup_url_kwarg = "cat_id"
+
+    permission_classes = [IsUserMatching]
 
     def get_queryset(self):
         # URL에서 user_id를 가져와 필터링
