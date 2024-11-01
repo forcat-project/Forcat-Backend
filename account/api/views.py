@@ -26,7 +26,7 @@ class UserViewSet(
     default_serializer_class = UserSerializer  # 기본 직렬화기
     update_serializer_class = UserUpdateSerializer  # 업데이트에 사용할 직렬화기
 
-    permission_classes = [IsUserMatching]
+    permission_classes = [AllowAny]
 
     def get_serializer_class(self):
         # 'update', 'partial_update' 요청일 때 다른 serializer 사용
@@ -73,7 +73,7 @@ class CatViewSet(viewsets.ModelViewSet):
     lookup_field = "cat_id"
     lookup_url_kwarg = "cat_id"
 
-    permission_classes = [IsUserMatching]
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
         # URL에서 user_id를 가져와 필터링
