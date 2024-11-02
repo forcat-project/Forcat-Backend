@@ -66,7 +66,7 @@ urlpatterns = [
         name="user-cart-items",
     ),
     path("api/payments/confirm", confirm_payment, name="confirm_payment"),
-    path("api/payments/create_order", create_order, name="create_order"),
+    path("api/payments/orders", create_order, name="create_order"),
     path(
         "api/orders/<int:user_id>/<str:order_id>/details/",
         order_detail,
