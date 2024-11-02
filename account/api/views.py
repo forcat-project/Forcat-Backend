@@ -1,18 +1,24 @@
-from account.models import Cat
-from account.api.serializers import CatSerializer
 from rest_framework import viewsets, status, mixins
 from rest_framework.decorators import action
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import AccessToken
 
-from account.api.serializer import UserSerializer, FileUploadSerializer
+from account.api.serializer import CatSerializer, PointSerializer
+from account.api.serializer import FileUploadSerializer
 from account.api.serializer import UserSerializer, UserUpdateSerializer
+from account.models import Cat
 from account.models import User
+from account.services import PointService
+from forcatProject.permissions import IsUserMatching
 
 
 class UserViewSet(
-    viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins.UpdateModelMixin
+    viewsets.GenericViewSet,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
 ):
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -20,14 +26,22 @@ class UserViewSet(
     default_serializer_class = UserSerializer  # 기본 직렬화기
     update_serializer_class = UserUpdateSerializer  # 업데이트에 사용할 직렬화기
 
+    permission_classes = [AllowAny]
+
     def get_serializer_class(self):
         # 'update', 'partial_update' 요청일 때 다른 serializer 사용
         if self.action in ["update", "partial_update"]:
             return self.update_serializer_class
         return self.default_serializer_class
 
-    @action(methods=["POST"], detail=False, url_path="sign-up")
+    @action(
+        methods=["POST"],
+        detail=False,
+        url_path="sign-up",
+        permission_classes=[AllowAny],
+    )
     def sign_up(self, request):
+
         # 유저 생성 처리
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -55,3 +69,54 @@ class FileUploadView(APIView):
 class CatViewSet(viewsets.ModelViewSet):
     queryset = Cat.objects.all()
     serializer_class = CatSerializer
+
+    lookup_field = "cat_id"
+    lookup_url_kwarg = "cat_id"
+
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        # URL에서 user_id를 가져와 필터링
+        user_id = self.kwargs.get("user_id")
+        if user_id is not None:
+            return Cat.objects.filter(user_id=user_id)
+        return Cat.objects.none()  # user_id가 없는 경우 빈 쿼리셋 반환
+
+    def perform_create(self, serializer):
+        # URL 경로에서 user_id 가져오기
+        user_id = self.kwargs.get("user_id")
+        # user 필드를 설정하여 인스턴스를 생성
+        serializer.save(user_id=user_id)
+
+
+class PointViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
+    serializer_class = PointSerializer
+    point_service = PointService()
+
+    @action(methods=["GET"], detail=False, url_path="random-point")
+    def get_random_point(self, request):
+        hash_key, point = self.point_service.get_random_point_hash()
+        if hash_key:
+            return Response(data={hash_key: point})
+        return Response(data={})
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        point_id = str(serializer.validated_data["point_id"])
+        point_value = serializer.validated_data["point"]
+
+        # Redis에서 point_id 확인
+        if not self.point_service.is_available_hash(point_id, point_value):
+            return Response(
+                {"error": "Point ID is not available"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # 유효성 검사 후 모델 인스턴스 생성
+        serializer.save()
+
+        # Redis에서 사용된 키값 삭제
+        self.point_service.delete_hashed_point(point_id)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)

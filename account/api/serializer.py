@@ -1,19 +1,26 @@
 import mimetypes
 import uuid
+from datetime import date
 
 import boto3
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from account.models import User
+from account.models import User, Cat, CatBreed, Point
 from forcatProject import settings
 
 
 class UserSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(read_only=True)
-    kakao_id = serializers.CharField(write_only=True, allow_null=True, required=False)
-    naver_id = serializers.CharField(write_only=True, allow_null=True, required=False)
-    google_id = serializers.CharField(write_only=True, allow_null=True, required=False)
+    kakao_id = serializers.CharField(
+        write_only=True, allow_null=True, allow_blank=True, required=False
+    )
+    naver_id = serializers.CharField(
+        write_only=True, allow_null=True, allow_blank=True, required=False
+    )
+    google_id = serializers.CharField(
+        write_only=True, allow_null=True, allow_blank=True, required=False
+    )
 
     class Meta:
         model = User
@@ -25,6 +32,7 @@ class UserSerializer(serializers.ModelSerializer):
             "phone_number",
             "address",
             "address_detail",
+            "points",
             "kakao_id",
             "naver_id",
             "google_id",
@@ -72,3 +80,50 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             "address",
             "address_detail",
         ]
+
+
+class CatSerializer(serializers.ModelSerializer):
+    cat_id = serializers.IntegerField(read_only=True)
+    days_since_birth = serializers.SerializerMethodField()
+    cat_breed_name = serializers.SerializerMethodField(read_only=True)
+
+    def get_cat_breed_name(self, obj):
+        return obj.cat_breed.breed_type  # 출력 시 cat_breed의 name을 반환
+
+    class Meta:
+        model = Cat
+        fields = [
+            "cat_id",
+            "name",
+            "cat_breed",
+            "cat_breed_name",
+            "birth_date",
+            "gender",
+            "is_neutered",
+            "weight",
+            "profile_image",
+            "days_since_birth",
+        ]
+
+    def get_days_since_birth(self, obj):
+        if obj.birth_date:
+            delta = date.today() - obj.birth_date
+            return delta.days
+        return None
+
+
+class PointSerializer(serializers.ModelSerializer):
+    user_id = serializers.CharField()
+
+    class Meta:
+        model = Point
+        fields = ["user_id", "point_id", "point"]
+
+    def create(self, validated_data):
+        user_id = validated_data["user_id"]
+        user = User.objects.get(id=user_id)
+        return Point.objects.create(
+            user=user,
+            point_id=validated_data["point_id"],
+            point=validated_data["point"],
+        )

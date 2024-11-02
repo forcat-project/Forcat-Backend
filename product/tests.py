@@ -531,6 +531,7 @@ class TestCartItem:
         url = reverse("user-cart-items", kwargs={"user_id": 1})
 
         api_client.post(url, data={"product_id": 3, "quantity": 2}, format="json")
+        api_client.post(url, data={"product_id": 1, "quantity": 2}, format="json")
 
         res = api_client.get(url)
         assert res.json() == [
@@ -544,7 +545,7 @@ class TestCartItem:
                     "price": "1000.00",
                     "discount_rate": "0.00",
                 },
-                "quantity": 1,
+                "quantity": 3,
             },
             {
                 "product": {

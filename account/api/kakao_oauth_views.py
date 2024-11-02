@@ -45,9 +45,12 @@ class KakaoOauthViewSet(APIView):
 
         if self._is_user_exists(user_info["id"]):
             auth_token = self._get_auth_token(user_info["id"])
-            return redirect(f"{FRONT_END_ENDPOINT}?token={auth_token}")
+
+            response = redirect(f"{FRONT_END_ENDPOINT}/login?access_token={auth_token}")
+            response.set_cookie("access_token", auth_token, max_age=1000)
+            return response
         return redirect(
-            f'{FRONT_END_ENDPOINT}/signup?id={user_info["id"]}&nickname={user_info["properties"]["nickname"]}&profile_image=${user_info["properties"]["profile_image"]}&'
+            f'{FRONT_END_ENDPOINT}/signup?kakao_id={user_info["id"]}&username={user_info["properties"]["nickname"]}&profile_image=${user_info["properties"]["profile_image"]}&'
         )
 
     def _get_code_from_request(self, request) -> str:
@@ -99,6 +102,6 @@ class KakaoOauthViewSet(APIView):
         """
         우리 서버의 auth token을 User의 정보로 가져옵니다.
         """
-        user = User.objects.filter.get(kakao_id=kakao_id)
+        user = User.objects.get(kakao_id=kakao_id)
         access_token = AccessToken.for_user(user)
         return access_token.__str__()
