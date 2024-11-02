@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from product.models import Product
 from django.contrib.auth.models import User
 
 
@@ -65,9 +66,23 @@ class Order(models.Model):
     )
     points_used = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
-    user_name = models.CharField(max_length=255, blank=False, null=False, default="Anonymous")  # 사용자 이름
-    phone_number = models.CharField(max_length=15, blank=False, null=False, default="000-0000-0000") # 전화번호
-    shipping_address_detail = models.CharField(max_length=255, blank=True, null=True)  # 상세 배송지
+    user_name = models.CharField(
+        max_length=255, blank=False, null=False, default="Anonymous"
+    )  # 사용자 이름
+    phone_number = models.CharField(
+        max_length=15, blank=False, null=False, default="000-0000-0000"
+    )  # 전화번호
+    shipping_address_detail = models.CharField(
+        max_length=255, blank=True, null=True
+    )  # 상세 배송지
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ("completed", "결제 완료"),
+            ("refunded", "환불 완료"),
+            ("failed", "결제 실패"),
+        ],
+    )  # 결제 상태
     payment_method = models.CharField(
         max_length=20,
         choices=[
@@ -112,11 +127,10 @@ class ProductOrder(models.Model):
     order = models.ForeignKey(
         Order, on_delete=models.CASCADE
     )  # 주문내역 ID (Many-to-One 관계)
-    discount_rate = models.DecimalField(
-        max_digits=5, decimal_places=2, default=0.00
-    )
+    discount_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
     product_id = models.IntegerField()
     product_company = models.CharField(max_length=255)
+    product_image = models.URLField()
 
     def __str__(self):
         return f"{self.quantity}x {self.product_name} for Order {self.order.id}"

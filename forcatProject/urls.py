@@ -1,5 +1,6 @@
 from django.urls import include, path
 from drf_yasg import openapi
+from payments.api.views import order_detail
 from drf_yasg.views import get_schema_view
 from rest_framework import routers
 from rest_framework.permissions import AllowAny
@@ -12,7 +13,7 @@ from product.api.views import (
 )
 from account.api.views import CatViewSet
 from account.api.views import UserViewSet, FileUploadView
-from payments.views import confirm_payment, create_order
+from payments.api.views import confirm_payment, create_order
 
 
 schema_view = get_schema_view(
@@ -66,5 +67,10 @@ urlpatterns = [
     ),
     path("api/payments/confirm", confirm_payment, name="confirm_payment"),
     path("api/payments/create_order", create_order, name="create_order"),
+    path(
+        "api/orders/<int:user_id>/<str:order_id>/details/",
+        order_detail,
+        name="order_detail",
+    ),
     path("api/", include(router.urls)),
 ]

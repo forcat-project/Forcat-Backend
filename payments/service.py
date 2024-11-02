@@ -18,6 +18,7 @@ def confirm_payment_success(order, response_data):
         )
         order.payment = payment
         order.shipping_status = "배송 준비중"
+        order.status = "결제 완료"
         order.payment_method = response_data.get("method")
         order.save()
 
@@ -36,15 +37,8 @@ def confirm_payment_success(order, response_data):
         return {
             "status": "결제 완료",
             "data": response_data,
-            "order_info": {
-                "order_id": order.id,
-                "shipping_memo": order.shipping_memo,
-                "points_used": order.points_used,
-                "shipping_status": order.shipping_status,
-                "payment_method": order.payment_method,
-                "original_amount": order.original_amount,
-                "products": products,
-            },
+            "user_id": order.user_id,
+            "order_id": order.id,
         }
     except Exception as e:
         logger.error(f"결제 성공 처리 중 오류 발생: {str(e)}")

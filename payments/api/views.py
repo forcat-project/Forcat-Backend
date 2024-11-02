@@ -1,14 +1,21 @@
 import requests
+import logging
 import base64
 import json
+
+from account.models import User
 from django.conf import settings
+from rest_framework import status
+from product.models import Product
 from django.http import JsonResponse
+from .serializers import OrderSerializer
+from rest_framework.response import Response
+from payments.constants import ERROR_MESSAGES
+from rest_framework.decorators import api_view
 from payments.models import Order, ProductOrder
 from django.views.decorators.csrf import csrf_exempt
 from payments.service import confirm_payment_success, confirm_payment_failure
-from account.models import User
-from payments.constants import ERROR_MESSAGES
-import logging
+
 
 logger = logging.getLogger(__name__)
 
@@ -30,11 +37,13 @@ def create_order(request):
         amount = data.get("amount")
         user_id = data.get("userId")
         shipping_address = data.get("shippingAddress")
+        shipping_address_detail = data.get("shippingAddressDetail")
         shipping_memo = data.get("shippingMemo")
         payment_method = data.get("paymentMethod")
         user_name = data.get("userName")
         phone_number = data.get("phoneNumber")
         products = data.get("products", [])
+
         # 입력 데이터 유효성 검사
         if not all([order_id, amount, user_id, user_name, phone_number]):
             return JsonResponse(
@@ -57,9 +66,21 @@ def create_order(request):
             shipping_address=shipping_address,
             payment_method=payment_method,
             shipping_status="결제 대기중",
+            shipping_address_detail=shipping_address_detail,
             shipping_memo=shipping_memo,
             points_used=points_used,
         )
+        # 재고 감소 및 ProductOrder 생성
+        for product in products:
+            product_id = product["product_id"]
+            quantity = product["quantity"]
+            product_image = product["product_image"]
+            product_obj = Product.objects.get(product_id=product_id)
+
+            # 재고 업데이트
+            product_obj.remain_count -= quantity
+            product_obj.save()
+
         for product in products:
             ProductOrder.objects.create(
                 product_name=product["product_name"],
@@ -69,6 +90,7 @@ def create_order(request):
                 product_id=product["product_id"],
                 discount_rate=product.get("discount_rate", 0),
                 product_company=product.get("product_company", "포캣"),
+                product_image=product.get("product_image"),
             )
         logger.info("모든 제품이 성공적으로 저장되었습니다.")
         return JsonResponse({"status": "주문이 생성되었습니다", "orderId": order.id})
@@ -87,7 +109,6 @@ def confirm_payment(request):
         return JsonResponse(
             {"error": ERROR_MESSAGES["invalid_request_method"]}, status=405
         )
-
     try:
         data = json.loads(request.body)
         payment_key = data.get("paymentKey")
@@ -139,7 +160,6 @@ def confirm_payment(request):
         if response.status_code == 200:
             # 결제 성공 처리
             result = confirm_payment_success(order, response_data)
-            print(result)
             return JsonResponse(result)
         else:
             # 결제 실패 시 처리
@@ -150,4 +170,49 @@ def confirm_payment(request):
         logger.error(f"{ERROR_MESSAGES['payment_failed']}: {str(e)}")
         return JsonResponse(
             {"error": ERROR_MESSAGES["payment_failed"], "details": str(e)}, status=400
+        )
+
+
+@api_view(["GET"])
+def order_detail(request, user_id, order_id):
+    try:
+        logger.info(f"Order 조회 시도 - user_id: {user_id}, order_id: {order_id}")
+        order = Order.objects.get(id=order_id, user__id=user_id)
+        logger.info(f"Order 조회 성공 - order_id: {order_id}, user_id: {user_id}")
+
+        # ProductOrder 정보 조회
+        product_orders = ProductOrder.objects.filter(order=order)
+        logger.info(
+            f"ProductOrder 조회 성공 - order_id: {order_id}, 상품 수: {product_orders.count()}"
+        )
+
+        # Order와 ProductOrder 정보 직렬화 및 응답 데이터 생성
+        serializer = OrderSerializer(order)
+        response_data = {
+            "order_info": serializer.data,
+            "products": [
+                {
+                    "product_name": product.product_name,
+                    "price": product.price,
+                    "quantity": product.quantity,
+                    "product_image": product.product_image,
+                    "discount_rate": product.discount_rate,
+                }
+                for product in product_orders
+            ],
+        }
+        logger.info(f"응답 데이터 생성 완료 - user_id: {user_id}, order_id: {order_id}")
+
+        return Response(response_data, status=status.HTTP_200_OK)
+
+    except Order.DoesNotExist:
+        error_message = f"Order with id '{order_id}' for user '{user_id}' not found."
+        logger.warning(f"Order 조회 실패: {error_message}")
+        return Response({"error": error_message}, status=status.HTTP_404_NOT_FOUND)
+
+    except Exception as e:
+        logger.error(f"예상치 못한 오류 발생: {str(e)}")
+        return Response(
+            {"error": "An unexpected error occurred."},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
