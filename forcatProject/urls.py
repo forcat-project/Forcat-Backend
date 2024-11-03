@@ -106,6 +106,16 @@ user_resource_routes = [
                         ]
                     ),
                 ),
+                path(
+                    "orders/<str:order_id>",
+                    order_detail,
+                    name="order_detail",
+                ),
+                path(
+                    "orders/",
+                    PaymentViewSet.as_view({"post": "confirm_payment"}),
+                    name="confirm_payment",
+                ),
             ]
         ),
     ),
@@ -126,11 +136,6 @@ api_v1_patterns = [
     # 라우터 포함
     path("", include(main_router.urls)),
     path("", include(user_resource_routes)),
-    path(
-        "orders/<int:user_id>/<str:order_id>/details/",
-        order_detail,
-        name="order_detail",
-    ),
 ]
 
 # 최상위 URL 패턴
