@@ -43,6 +43,7 @@ def 사용자_생성():
 
 @pytest.fixture
 def 고양이_품종_생성():
+    CatBreed.objects.create(category_id=2, breed_type="냐옹이", rank=2)
     return CatBreed.objects.create(category_id=1, breed_type="Persian", rank=1)
 
 
@@ -326,3 +327,16 @@ class TestPoint:
         hash_key = uuid.uuid1().hex
         value = 100
         redis_cache.set(hash_key, value, 300)
+
+
+@pytest.mark.django_db
+class TestCatBreed:
+    def test_고양이_품종_조회(self, api_client, 고양이_품종_생성):
+        url = reverse("cat-breed-list")
+
+        res = api_client.get(url)
+
+        assert res.json() == [
+            {"category_id": 1, "breed_type": "Persian", "rank": 1},
+            {"category_id": 2, "breed_type": "냐옹이", "rank": 2},
+        ]

@@ -136,3 +136,9 @@ class PointSerializer(serializers.ModelSerializer):
             point_id=validated_data["point_id"],
             point=validated_data["point"],
         )
+
+
+class CatBreedSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CatBreed
+        fields = "__all__"
