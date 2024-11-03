@@ -4,7 +4,7 @@ from payments.api.views import order_detail
 from drf_yasg.views import get_schema_view
 from rest_framework import routers
 from rest_framework.permissions import AllowAny
-
+from payments.api.views import PaymentViewSet
 from account.api.kakao_oauth_views import KakaoOauthViewSet
 from product.api.views import CartItemViewSet
 from account.api.views import (
@@ -18,7 +18,6 @@ from product.api.views import (
     CategoryViewSet,
 )
 
-from payments.api.views import confirm_payment, create_order
 
 # Swagger 설정
 schema_view = get_schema_view(
@@ -40,6 +39,7 @@ main_router.register("products", ProductViewSet)
 main_router.register("categories", CategoryViewSet)
 main_router.register("users", UserViewSet)
 main_router.register("points", PointViewSet, basename="points")
+main_router.register("payments", PaymentViewSet, basename="payments")
 
 # 사용자별 리소스 라우트 (cats, cart)
 user_resource_routes = [
@@ -126,14 +126,11 @@ api_v1_patterns = [
     # 라우터 포함
     path("", include(main_router.urls)),
     path("", include(user_resource_routes)),
-    path("api/payments/confirm", confirm_payment, name="confirm_payment"),
-    path("api/payments/orders", create_order, name="create_order"),
     path(
-        "api/orders/<int:user_id>/<str:order_id>/details/",
+        "orders/<int:user_id>/<str:order_id>/details/",
         order_detail,
         name="order_detail",
     ),
-
 ]
 
 # 최상위 URL 패턴
