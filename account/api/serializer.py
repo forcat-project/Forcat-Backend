@@ -38,6 +38,15 @@ class UserSerializer(serializers.ModelSerializer):
             "google_id",
         ]
 
+    def validate_kakao_id(self, value):
+        return value if value else None
+
+    def validate_naver_id(self, value):
+        return value if value else None
+
+    def validate_google_id(self, value):
+        return value if value else None
+
 
 class FileUploadSerializer(serializers.Serializer):
     file = serializers.FileField()

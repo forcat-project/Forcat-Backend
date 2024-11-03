@@ -164,6 +164,12 @@ class TestCase:
         assert User.objects.filter(kakao_id="kakao").exists() is True
         assert User.objects.filter(kakao_id="naver").exists() is False
 
+    def test_유저_DB_조회_테스트(self, 테스트_카카오_가입_유저_생성):
+        # oauth 값중 입력하지 않은 값은 None으로 저장 되어야 한다.
+
+        user = User.objects.get(id=1)
+        assert user.__dict__["naver_id"] == None
+
 
 @pytest.mark.django_db
 class TestCatCRUD:

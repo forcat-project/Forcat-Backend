@@ -11,7 +11,6 @@ from account.api.serializer import UserSerializer, UserUpdateSerializer
 from account.models import Cat
 from account.models import User
 from account.services import PointService
-from forcatProject.permissions import IsUserMatching
 
 
 class UserViewSet(
