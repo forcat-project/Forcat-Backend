@@ -11,6 +11,7 @@ from account.api.views import (
     FileUploadView,
     UserViewSet,
     PointViewSet,
+    CatBreedViewSet,
 )
 from product.api.views import (
     ProductViewSet,
@@ -37,6 +38,7 @@ main_router.register("products", ProductViewSet)
 main_router.register("categories", CategoryViewSet)
 main_router.register("users", UserViewSet)
 main_router.register("points", PointViewSet, basename="points")
+main_router.register("cat-breed", CatBreedViewSet, basename="cat-breed")
 
 # 사용자별 리소스 라우트 (cats, cart)
 user_resource_routes = [
