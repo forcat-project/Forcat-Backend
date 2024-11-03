@@ -124,3 +124,4 @@ class PointViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
 class CatBreedViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     serializer_class = CatBreedSerializer
     queryset = CatBreed.objects.all().order_by("rank")
+    permission_classes = [AllowAny]
