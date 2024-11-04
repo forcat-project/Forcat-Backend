@@ -1,6 +1,6 @@
 from django.urls import include, path
 from drf_yasg import openapi
-from payments.api.views import order_detail
+from payments.api.views import order_detail, OrderViewSet
 from drf_yasg.views import get_schema_view
 from rest_framework import routers
 from rest_framework.permissions import AllowAny
@@ -115,8 +115,8 @@ user_resource_routes = [
                 ),
                 path(
                     "orders/",
-                    PaymentViewSet.as_view({"post": "confirm_payment"}),
-                    name="confirm_payment",
+                    OrderViewSet.as_view({"post": "create_order", "get": "list"}),
+                    name="order",
                 ),
             ]
         ),
