@@ -1,7 +1,12 @@
+from datetime import datetime
+from decimal import Decimal
+
 import pytest
 import json
 from django.urls import reverse
 from django.test import Client
+from freezegun import freeze_time
+
 from payments.models import Order, ProductOrder, Transaction
 from payments.service import confirm_payment_success, confirm_payment_failure
 from account.models import User
@@ -21,6 +26,93 @@ def test_유저():
         username="테스트유저",
         nickname="testnickname",
         password="password",
+    )
+
+
+@pytest.fixture()
+@freeze_time("2024-10-24 10:10:10")
+def test_주문서_생성(test_유저):
+    # 거래 정보 더미 데이터 생성 (Transaction은 이미 정의된 모델이라 가정)
+    transaction = Transaction.objects.create(
+        user=test_유저,
+        amount=Decimal("500.00"),
+        status="completed",
+    )
+
+    transaction_2 = Transaction.objects.create(
+        user=test_유저,
+        amount=Decimal("500.00"),
+        status="completed",
+    )
+
+    order = Order.objects.create(
+        id="order_12345",
+        user=test_유저,
+        payment=transaction,
+        order_date=datetime.now(),
+        original_amount=Decimal("1000.00"),
+        points_used=Decimal("100.00"),
+        total_amount=Decimal("900.00"),
+        user_name="테스트 유저",
+        phone_number="010-1234-5678",
+        shipping_address="서울특별시 강남구",
+        shipping_address_detail="테스트 상세 주소",
+        status="completed",
+        payment_method="card",
+        shipping_status="preparing",
+        shipping_memo="부재 시 경비실에 맡겨주세요.",
+    )
+
+    order_2 = Order.objects.create(
+        id="gpgpgpgp",
+        user=test_유저,
+        payment=transaction_2,
+        order_date=datetime.now(),
+        original_amount=Decimal("1000.00"),
+        points_used=Decimal("100.00"),
+        total_amount=Decimal("900.00"),
+        user_name="테스트 유저",
+        phone_number="010-1234-5678",
+        shipping_address="서울특별시 강남구",
+        shipping_address_detail="테스트 상세 주소",
+        status="completed",
+        payment_method="card",
+        shipping_status="preparing",
+        shipping_memo="부재 시 경비실에 맡겨주세요.",
+    )
+
+    # 상품 주문 정보 더미 데이터 생성
+    ProductOrder.objects.create(
+        product_name="야옹야옹 고양이 간식",
+        price=Decimal("100.00"),
+        quantity=2,
+        order=order,
+        discount_rate=Decimal("5.00"),
+        product_id=123,
+        product_company="야옹야옹 컴퍼니",
+        product_image="https://example.com/product_image.jpg",
+    )
+
+    ProductOrder.objects.create(
+        product_name="야옹이 놀잇감",
+        price=Decimal("100.00"),
+        quantity=2,
+        order=order,
+        discount_rate=Decimal("5.00"),
+        product_id=123,
+        product_company="야옹야옹 컴퍼니 오야붕",
+        product_image="https://example.com/product_image.jpg",
+    )
+
+    ProductOrder.objects.create(
+        product_name="야옹이 놀잇감",
+        price=Decimal("100.00"),
+        quantity=2,
+        order=order_2,
+        discount_rate=Decimal("5.00"),
+        product_id=123,
+        product_company="야옹야옹 컴퍼니 오야붕",
+        product_image="https://example.com/product_image.jpg",
     )
 
 
@@ -44,8 +136,7 @@ def test_주문_생성_성공(client, test_유저):
         remain_count=10,
     )
 
-    # 'payments-confirm'로 URL 접근
-    url = reverse("payments-create-order")
+    url = reverse("order_create", kwargs={"user_id": 1})
 
     주문_데이터 = {
         "orderId": "test_order_123",
@@ -164,7 +255,7 @@ def test_결제_확인_성공(mock_post, client, test_유저):
 @pytest.mark.django_db
 def test_주문_생성_매개변수_누락(client):
     # 필수 매개변수 누락 시도
-    url = reverse("payments-create-order")
+    url = reverse("order_create", kwargs={"user_id": 1})
     불완전한_데이터 = {
         "orderId": "test_order_123",
         # "amount"와 "userId"가 누락됨
@@ -289,3 +380,78 @@ def test_결제_실패_서비스_확인(test_유저):
     # 주문 상태 검증
     order.refresh_from_db()
     assert order.shipping_status == "결제 실패"
+
+
+@pytest.mark.django_db
+def test_사용자의_주문서_조회(client, test_주문서_생성):
+    url = reverse("order", kwargs={"user_id": 1})
+
+    res = client.get(url)
+
+    assert res.json() == [
+        {
+            "id": "order_12345",
+            "user": 1,
+            "payment": 1,
+            "order_date": "2024-10-24T10:10:10",
+            "original_amount": "1000.00",
+            "points_used": "100.00",
+            "total_amount": "900.00",
+            "user_name": "테스트 유저",
+            "phone_number": "010-1234-5678",
+            "shipping_address": "서울특별시 강남구",
+            "shipping_address_detail": "테스트 상세 주소",
+            "shipping_memo": "부재 시 경비실에 맡겨주세요.",
+            "payment_method": "card",
+            "shipping_status": "preparing",
+            "products": [
+                {
+                    "product_name": "야옹야옹 고양이 간식",
+                    "price": "100.00",
+                    "quantity": 2,
+                    "discount_rate": "5.00",
+                    "product_id": 123,
+                    "product_company": "야옹야옹 컴퍼니",
+                    "product_image": "https://example.com/product_image.jpg",
+                },
+                {
+                    "product_name": "야옹이 놀잇감",
+                    "price": "100.00",
+                    "quantity": 2,
+                    "discount_rate": "5.00",
+                    "product_id": 123,
+                    "product_company": "야옹야옹 컴퍼니 오야붕",
+                    "product_image": "https://example.com/product_image.jpg",
+                },
+            ],
+            "status": "completed",
+        },
+        {
+            "id": "gpgpgpgp",
+            "user": 1,
+            "payment": 2,
+            "order_date": "2024-10-24T10:10:10",
+            "original_amount": "1000.00",
+            "points_used": "100.00",
+            "total_amount": "900.00",
+            "user_name": "테스트 유저",
+            "phone_number": "010-1234-5678",
+            "shipping_address": "서울특별시 강남구",
+            "shipping_address_detail": "테스트 상세 주소",
+            "shipping_memo": "부재 시 경비실에 맡겨주세요.",
+            "payment_method": "card",
+            "shipping_status": "preparing",
+            "products": [
+                {
+                    "product_name": "야옹이 놀잇감",
+                    "price": "100.00",
+                    "quantity": 2,
+                    "discount_rate": "5.00",
+                    "product_id": 123,
+                    "product_company": "야옹야옹 컴퍼니 오야붕",
+                    "product_image": "https://example.com/product_image.jpg",
+                }
+            ],
+            "status": "completed",
+        },
+    ]
