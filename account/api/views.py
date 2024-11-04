@@ -5,13 +5,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import AccessToken
 
-from account.api.serializer import CatSerializer, PointSerializer
+from account.api.serializer import CatSerializer, PointSerializer, CatBreedSerializer
 from account.api.serializer import FileUploadSerializer
 from account.api.serializer import UserSerializer, UserUpdateSerializer
-from account.models import Cat
+from account.models import Cat, CatBreed
 from account.models import User
 from account.services import PointService
-from forcatProject.permissions import IsUserMatching
 
 
 class UserViewSet(
@@ -120,3 +119,9 @@ class PointViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
         # Redis에서 사용된 키값 삭제
         self.point_service.delete_hashed_point(point_id)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class CatBreedViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
+    serializer_class = CatBreedSerializer
+    queryset = CatBreed.objects.all().order_by("rank")
+    permission_classes = [AllowAny]

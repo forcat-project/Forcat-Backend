@@ -43,6 +43,7 @@ def 사용자_생성():
 
 @pytest.fixture
 def 고양이_품종_생성():
+    CatBreed.objects.create(category_id=2, breed_type="냐옹이", rank=2)
     return CatBreed.objects.create(category_id=1, breed_type="Persian", rank=1)
 
 
@@ -163,6 +164,12 @@ class TestCase:
 
         assert User.objects.filter(kakao_id="kakao").exists() is True
         assert User.objects.filter(kakao_id="naver").exists() is False
+
+    def test_유저_DB_조회_테스트(self, 테스트_카카오_가입_유저_생성):
+        # oauth 값중 입력하지 않은 값은 None으로 저장 되어야 한다.
+
+        user = User.objects.get(id=1)
+        assert user.__dict__["naver_id"] == None
 
 
 @pytest.mark.django_db
@@ -320,3 +327,16 @@ class TestPoint:
         hash_key = uuid.uuid1().hex
         value = 100
         redis_cache.set(hash_key, value, 300)
+
+
+@pytest.mark.django_db
+class TestCatBreed:
+    def test_고양이_품종_조회(self, api_client, 고양이_품종_생성):
+        url = reverse("cat-breed-list")
+
+        res = api_client.get(url)
+
+        assert res.json() == [
+            {"category_id": 1, "breed_type": "Persian", "rank": 1},
+            {"category_id": 2, "breed_type": "냐옹이", "rank": 2},
+        ]
