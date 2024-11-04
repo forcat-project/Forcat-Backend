@@ -3,6 +3,8 @@ import uuid
 
 from django_redis import get_redis_connection
 
+from account.models import Point
+
 
 class PointService:
     cache = get_redis_connection("default")
@@ -21,8 +23,7 @@ class PointService:
     def delete_hashed_point(self, hash_key: str) -> None:
         self.cache.delete(hash_key)
 
-    @staticmethod
-    def _get_random_point_value():
+    def _get_random_point_value(self):
         rand_val = random.random()  # 0 이상 1 미만의 난수 생성
         if rand_val < 1 / 500:
             return 5000
@@ -35,3 +36,9 @@ class PointService:
         elif rand_val < 1 / 2:  # 임시
             return 1
         return 0  # 어떤 조건에도 해당하지 않으면 0 반환
+
+    @staticmethod
+    def deduct_point(user_id: int, point_used: int):
+        Point.objects.create(
+            point_id=uuid.uuid1().hex, user_id=user_id, point=-point_used
+        )
