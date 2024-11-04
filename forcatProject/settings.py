@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     ###
     "product",
     "account",
+    "payments",
 ]
 
 MIDDLEWARE = [
@@ -70,7 +71,7 @@ ROOT_URLCONF = "forcatProject.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -139,8 +140,8 @@ TIME_ZONE = "Asia/Seoul"
 
 USE_I18N = True
 
-USE_TZ = True
-
+# USE_TZ = True
+USE_TZ = False
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
@@ -157,6 +158,8 @@ KAKAO_CLIENT_ID = os.getenv("KAKAO_CLIENT_ID")
 KAKAO_REDIRECT_URI = os.getenv("KAKAO_REDIRECT_URI")
 KAKAO_CLIENT_SECRET = os.getenv("KAKAO_CLIENT_SECRET")
 FRONT_END_ENDPOINT = os.getenv("FRONT_END_ENDPOINT")
+TOSS_SECRET_KEY = os.getenv("TOSS_SECRET_KEY")
+TOSS_CONFIRM_API_URL = "https://api.tosspayments.com/v1/payments/confirm"
 
 
 # for upload s3 image

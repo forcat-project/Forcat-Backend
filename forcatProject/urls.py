@@ -1,9 +1,10 @@
 from django.urls import include, path
 from drf_yasg import openapi
+from payments.api.views import order_detail
 from drf_yasg.views import get_schema_view
 from rest_framework import routers
 from rest_framework.permissions import AllowAny
-
+from payments.api.views import PaymentViewSet
 from account.api.kakao_oauth_views import KakaoOauthViewSet
 from product.api.views import CartItemViewSet
 from account.api.views import (
@@ -17,6 +18,7 @@ from product.api.views import (
     ProductViewSet,
     CategoryViewSet,
 )
+
 
 # Swagger 설정
 schema_view = get_schema_view(
@@ -38,6 +40,7 @@ main_router.register("products", ProductViewSet)
 main_router.register("categories", CategoryViewSet)
 main_router.register("users", UserViewSet)
 main_router.register("points", PointViewSet, basename="points")
+main_router.register("payments", PaymentViewSet, basename="payments")
 main_router.register("cat-breed", CatBreedViewSet, basename="cat-breed")
 
 # 사용자별 리소스 라우트 (cats, cart)
@@ -104,6 +107,16 @@ user_resource_routes = [
                             ),
                         ]
                     ),
+                ),
+                path(
+                    "orders/<str:order_id>",
+                    order_detail,
+                    name="order_detail",
+                ),
+                path(
+                    "orders/",
+                    PaymentViewSet.as_view({"post": "confirm_payment"}),
+                    name="confirm_payment",
                 ),
             ]
         ),
