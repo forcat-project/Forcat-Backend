@@ -136,7 +136,7 @@ def test_주문_생성_성공(client, test_유저):
         remain_count=10,
     )
 
-    url = reverse("order_create", kwargs={"user_id": 1})
+    url = reverse("order", kwargs={"user_id": 1})
 
     주문_데이터 = {
         "orderId": "test_order_123",
@@ -255,7 +255,7 @@ def test_결제_확인_성공(mock_post, client, test_유저):
 @pytest.mark.django_db
 def test_주문_생성_매개변수_누락(client):
     # 필수 매개변수 누락 시도
-    url = reverse("order_create", kwargs={"user_id": 1})
+    url = reverse("order", kwargs={"user_id": 1})
     불완전한_데이터 = {
         "orderId": "test_order_123",
         # "amount"와 "userId"가 누락됨

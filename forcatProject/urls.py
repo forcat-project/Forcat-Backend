@@ -1,5 +1,7 @@
 from django.urls import include, path
 from drf_yasg import openapi
+
+from account.api.token_obtain_views import CustomTokenRefreshView
 from payments.api.views import order_detail, OrderViewSet
 from drf_yasg.views import get_schema_view
 from rest_framework import routers
@@ -42,6 +44,7 @@ main_router.register("users", UserViewSet)
 main_router.register("points", PointViewSet, basename="points")
 main_router.register("payments", PaymentViewSet, basename="payments")
 main_router.register("cat-breed", CatBreedViewSet, basename="cat-breed")
+
 
 # 사용자별 리소스 라우트 (cats, cart)
 user_resource_routes = [
@@ -135,6 +138,8 @@ api_v1_patterns = [
     path("oauth/kakao", KakaoOauthViewSet.as_view(), name="kakao-oauth-login"),
     # 파일 업로드
     path("upload", FileUploadView.as_view(), name="file-upload"),
+    # 토큰 관련
+    path("refresh", CustomTokenRefreshView.as_view(), name="refresh"),
     # 라우터 포함
     path("", include(main_router.urls)),
     path("", include(user_resource_routes)),
