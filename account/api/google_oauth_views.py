@@ -38,11 +38,13 @@ class GoogleOauthViewSet(APIView):
             )
 
         if self._is_user_exists(user_info["sub"]):
-            auth_token = self._get_auth_token(user_info["sub"])
-            return redirect(f"{FRONT_END_ENDPOINT}?token={auth_token}")
-
+            access_token, refresh_token = self._get_auth_token(user_info["sub"])
+            response = redirect(
+                f"{FRONT_END_ENDPOINT}/login?access_token={access_token}&refresh_token={refresh_token}"
+            )
+            return response
         return redirect(
-            f'{FRONT_END_ENDPOINT}?id={user_info["sub"]}&name={user_info["name"]}&picture={user_info["picture"]}'
+            f'{FRONT_END_ENDPOINT}/signup?google_id={user_info["sub"]}&username={user_info["name"]}&profile_image={user_info["picture"]}'
         )
 
     def _get_code_from_request(self, request) -> str:

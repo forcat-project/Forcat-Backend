@@ -144,8 +144,8 @@ api_v1_patterns = [
         name="schema-swagger-ui",
     ),
     # OAuth 관련
-    path("api/oauth/google", GoogleOauthViewSet.as_view(), name="google-oauth-login"),
-    path("api/oauth/naver", NaverOauthViewSet.as_view(), name="naver-oauth-login"),
+    path("oauth/google", GoogleOauthViewSet.as_view(), name="google-oauth-login"),
+    path("oauth/naver", NaverOauthViewSet.as_view(), name="naver-oauth-login"),
     path("oauth/kakao", KakaoOauthViewSet.as_view(), name="kakao-oauth-login"),
     # 파일 업로드
     path("upload", FileUploadView.as_view(), name="file-upload"),
