@@ -45,10 +45,15 @@ class NaverOauthViewSet(APIView):
             )
 
         if self._is_user_exists(user_info["response"]["id"]):
-            auth_token = self._get_auth_token(user_info["response"]["id"])
-            return redirect(f"{FRONT_END_ENDPOINT}?token={auth_token}")
+            access_token, refresh_token = self._get_auth_token(
+                user_info["response"]["id"]
+            )
+            response = redirect(
+                f"{FRONT_END_ENDPOINT}/login?access_token={access_token}&refresh_token={refresh_token}"
+            )
+            return response
         return redirect(
-            f'{FRONT_END_ENDPOINT}?id={user_info["response"]["id"]}&nickname={user_info["response"]["nickname"]}&profile_image={user_info["response"]["profile_image"]}&'
+            f'{FRONT_END_ENDPOINT}/signup?naver_id={user_info["response"]["id"]}&username={user_info["response"]["nickname"]}&profile_image={user_info["response"]["profile_image"]}&'
         )
 
     def _get_code_from_request(self, request) -> str:
