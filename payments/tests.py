@@ -384,7 +384,7 @@ def test_결제_실패_서비스_확인(test_유저):
 
 @pytest.mark.django_db
 def test_사용자의_주문서_조회(client, test_주문서_생성):
-    url = reverse("order", kwargs={"user_id": 1})
+    url = reverse("order-list", kwargs={"user_id": 1})
 
     res = client.get(url)
 
@@ -455,3 +455,20 @@ def test_사용자의_주문서_조회(client, test_주문서_생성):
             "status": "completed",
         },
     ]
+
+
+@pytest.mark.django_db
+def test_주문_삭제(client, test_유저, test_주문서_생성):
+    # 주문의 ID를 사용하여 삭제 테스트
+    order_id = "order_12345"
+    url = reverse(
+        "order-detail", kwargs={"user_id": test_유저.id, "order_id": order_id}
+    )
+    response = client.delete(url)
+
+    assert response.status_code == 200
+    assert response.json() == {"message": "Order has been successfully deleted."}
+
+    # 주문이 삭제되었는지 확인
+    with pytest.raises(Order.DoesNotExist):
+        Order.objects.get(id=order_id)

@@ -323,37 +323,47 @@ class OrderViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
             return JsonResponse({"error": str(e)}, status=500)
 
 
-@api_view(["GET"])
+@api_view(["GET", "DELETE"])
 def order_detail(request, user_id, order_id):
     try:
         logger.info(f"Order 조회 시도 - user_id: {user_id}, order_id: {order_id}")
         order = Order.objects.get(id=order_id, user__id=user_id)
-        logger.info(f"Order 조회 성공 - order_id: {order_id}, user_id: {user_id}")
 
-        # ProductOrder 정보 조회
-        product_orders = ProductOrder.objects.filter(order=order)
-        logger.info(
-            f"ProductOrder 조회 성공 - order_id: {order_id}, 상품 수: {product_orders.count()}"
-        )
+        if request.method == "GET":
+            # ProductOrder 정보 조회
+            product_orders = ProductOrder.objects.filter(order=order)
+            logger.info(
+                f"ProductOrder 조회 성공 - order_id: {order_id}, 상품 수: {product_orders.count()}"
+            )
 
-        # Order와 ProductOrder 정보 직렬화 및 응답 데이터 생성
-        serializer = OrderSerializer(order)
-        response_data = {
-            "order_info": serializer.data,
-            "products": [
-                {
-                    "product_name": product.product_name,
-                    "price": product.price,
-                    "quantity": product.quantity,
-                    "product_image": product.product_image,
-                    "discount_rate": product.discount_rate,
-                }
-                for product in product_orders
-            ],
-        }
-        logger.info(f"응답 데이터 생성 완료 - user_id: {user_id}, order_id: {order_id}")
+            # Order와 ProductOrder 정보 직렬화 및 응답 데이터 생성
+            serializer = OrderSerializer(order)
+            response_data = {
+                "order_info": serializer.data,
+                "products": [
+                    {
+                        "product_name": product.product_name,
+                        "price": product.price,
+                        "quantity": product.quantity,
+                        "product_image": product.product_image,
+                        "discount_rate": product.discount_rate,
+                    }
+                    for product in product_orders
+                ],
+            }
+            logger.info(
+                f"응답 데이터 생성 완료 - user_id: {user_id}, order_id: {order_id}"
+            )
+            return Response(response_data, status=status.HTTP_200_OK)
 
-        return Response(response_data, status=status.HTTP_200_OK)
+        elif request.method == "DELETE":
+            # 삭제 처리
+            order.delete()
+            logger.info(f"Order 삭제 성공 - order_id: {order_id}, user_id: {user_id}")
+            return Response(
+                {"message": "Order has been successfully deleted."},
+                status=status.HTTP_200_OK,
+            )
 
     except Order.DoesNotExist:
         error_message = f"Order with id '{order_id}' for user '{user_id}' not found."

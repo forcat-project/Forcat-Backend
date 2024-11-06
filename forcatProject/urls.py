@@ -109,14 +109,23 @@ user_resource_routes = [
                     ),
                 ),
                 path(
-                    "orders/<str:order_id>",
-                    order_detail,
-                    name="order_detail",
-                ),
-                path(
                     "orders/",
-                    OrderViewSet.as_view({"post": "create_order", "get": "list"}),
-                    name="order",
+                    include(
+                        [
+                            path(
+                                "",
+                                OrderViewSet.as_view(
+                                    {"post": "create_order", "get": "list"}
+                                ),
+                                name="order-list",
+                            ),
+                            path(
+                                "<str:order_id>",
+                                order_detail,
+                                name="order-detail",
+                            ),
+                        ]
+                    ),
                 ),
             ]
         ),
