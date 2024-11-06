@@ -6,7 +6,7 @@ from django.shortcuts import redirect
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from account.models import User
 from forcatProject.settings import (
@@ -44,10 +44,10 @@ class KakaoOauthViewSet(APIView):
             )
 
         if self._is_user_exists(user_info["id"]):
-            auth_token = self._get_auth_token(user_info["id"])
-
-            response = redirect(f"{FRONT_END_ENDPOINT}/login?access_token={auth_token}")
-            response.set_cookie("access_token", auth_token, max_age=1000)
+            access_token, refresh_token = self._get_auth_token(user_info["id"])
+            response = redirect(
+                f"{FRONT_END_ENDPOINT}/login?access_token={access_token}&refresh_token={refresh_token}"
+            )
             return response
         return redirect(
             f'{FRONT_END_ENDPOINT}/signup?kakao_id={user_info["id"]}&username={user_info["properties"]["nickname"]}&profile_image=${user_info["properties"]["profile_image"]}&'
@@ -98,10 +98,10 @@ class KakaoOauthViewSet(APIView):
         """
         return User.objects.filter(kakao_id=kakao_id).exists()
 
-    def _get_auth_token(self, kakao_id: str) -> str:
+    def _get_auth_token(self, kakao_id: str) -> [str, str]:
         """
         우리 서버의 auth token을 User의 정보로 가져옵니다.
         """
         user = User.objects.get(kakao_id=kakao_id)
-        access_token = AccessToken.for_user(user)
-        return access_token.__str__()
+        refresh_token = RefreshToken.for_user(user)
+        return str(refresh_token.access_token), str(refresh_token)

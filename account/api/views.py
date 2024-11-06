@@ -3,7 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 
 from account.api.serializer import CatSerializer, PointSerializer, CatBreedSerializer
 from account.api.serializer import FileUploadSerializer
@@ -46,12 +46,13 @@ class UserViewSet(
         serializer.is_valid(raise_exception=True)
         user = serializer.save()  # 새 유저 생성
 
-        # 유저를 위한 Access Token 생성
-        access_token = AccessToken.for_user(user)
-
-        # 응답 데이터에 토큰 추가
         response_data = serializer.data
+
+        refresh = RefreshToken.for_user(user)
+
+        access_token = refresh.access_token
         response_data["access_token"] = str(access_token)
+        response_data["refresh_token"] = str(refresh)
 
         return Response(response_data, status=status.HTTP_201_CREATED)
 
