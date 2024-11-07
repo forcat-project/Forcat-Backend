@@ -4,7 +4,7 @@ from rest_framework import status, serializers
 
 
 class TokenRefreshSerializer(serializers.Serializer):
-    refresh = serializers.CharField(required=True)
+    refresh_token = serializers.CharField(required=True)
 
 
 class CustomTokenRefreshView(APIView):
@@ -14,7 +14,7 @@ class CustomTokenRefreshView(APIView):
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        refresh = serializer.validated_data["refresh"]
+        refresh = serializer.validated_data["refresh_token"]
 
         # 새로운 Access Token 생성
         access_token = str(refresh.access_token)
