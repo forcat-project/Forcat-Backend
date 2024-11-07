@@ -394,9 +394,9 @@ def cancel_order(request, user_id, order_id):
         order = Order.objects.get(id=order_id, user__id=user_id, cancellation_date=None)
 
         # 결제 취소 업데이트 처리
-        order.payment.status = "canceled"
-        order.shipping_status = "canceled"
-        order.status = "canceled"
+        order.payment.status = "환불 완료"
+        order.shipping_status = "주문 취소"
+        order.status = "주문 취소"
         order.payment.save()
         order.save()
 
