@@ -328,10 +328,18 @@ class OrderViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
 def order_detail(request, user_id, order_id):
     try:
         logger.info(f"Order 조회 시도 - user_id: {user_id}, order_id: {order_id}")
-        order = Order.objects.get(id=order_id, user__id=user_id, cancellation_date=None)
+        order = Order.objects.get(id=order_id, user__id=user_id)
 
         if request.method == "GET":
             # ProductOrder 정보 조회
+            if order.cancellation_date is not None:
+                return Response(
+                    {
+                        "error": f"Order with id '{order_id}' for user '{user_id}' not found."
+                    },
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+
             product_orders = ProductOrder.objects.filter(order=order)
             logger.info(
                 f"ProductOrder 조회 성공 - order_id: {order_id}, 상품 수: {product_orders.count()}"
