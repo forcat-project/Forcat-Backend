@@ -7,6 +7,8 @@ from drf_yasg.views import get_schema_view
 from rest_framework import routers
 from rest_framework.permissions import AllowAny
 from payments.api.views import PaymentViewSet
+
+from account.api.google_oauth_views import GoogleOauthViewSet
 from account.api.kakao_oauth_views import KakaoOauthViewSet
 from product.api.views import CartItemViewSet
 from account.api.views import (
@@ -16,10 +18,8 @@ from account.api.views import (
     PointViewSet,
     CatBreedViewSet,
 )
-from product.api.views import (
-    ProductViewSet,
-    CategoryViewSet,
-)
+from account.api.naver_oauth_views import NaverOauthViewSet
+from product.api.views import ProductViewSet, CategoryViewSet
 
 
 # Swagger 설정
@@ -144,6 +144,8 @@ api_v1_patterns = [
         name="schema-swagger-ui",
     ),
     # OAuth 관련
+    path("oauth/google", GoogleOauthViewSet.as_view(), name="google-oauth-login"),
+    path("oauth/naver", NaverOauthViewSet.as_view(), name="naver-oauth-login"),
     path("oauth/kakao", KakaoOauthViewSet.as_view(), name="kakao-oauth-login"),
     # 파일 업로드
     path("upload", FileUploadView.as_view(), name="file-upload"),
