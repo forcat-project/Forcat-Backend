@@ -6,7 +6,7 @@ from django.shortcuts import redirect
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from account.models import User
 from forcatProject.settings import (
@@ -106,5 +106,5 @@ class NaverOauthViewSet(APIView):
         우리 서버의 auth token을 User의 정보로 가져옵니다.
         """
         user = User.objects.get(naver_id=naver_id)
-        access_token = AccessToken.for_user(user)
-        return access_token.__str__()
+        refresh_token = RefreshToken.for_user(user)
+        return str(refresh_token.access_token), str(refresh_token)
