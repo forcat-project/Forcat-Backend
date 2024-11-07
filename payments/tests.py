@@ -9,7 +9,7 @@ from freezegun import freeze_time
 
 from payments.models import Order, ProductOrder, Transaction
 from payments.service import confirm_payment_success, confirm_payment_failure
-from account.models import User
+from account.models import User, Point
 from product.models import Product
 from unittest.mock import patch
 
@@ -114,10 +114,16 @@ def test_주문서_생성(test_유저):
         product_company="야옹야옹 컴퍼니 오야붕",
         product_image="https://example.com/product_image.jpg",
     )
+@pytest.fixture
+def test_1600_포인트가_있는_유저(test_유저):
+    Point.objects.create(point_id="a1", user=test_유저, point=100)
+    Point.objects.create(point_id="a2", user=test_유저, point=500)
+    Point.objects.create(point_id="a3", user=test_유저, point=1000)
+    return test_유저
 
 
 @pytest.mark.django_db
-def test_주문_생성_성공(client, test_유저):
+def test_주문_생성_성공(client, test_1600_포인트가_있는_유저):
     # 필요한 Product 데이터 생성
     Product.objects.create(
         product_id=1,
@@ -143,7 +149,7 @@ def test_주문_생성_성공(client, test_유저):
         "originalAmount": 5000,
         "amount": 4000,
         "pointsUsed": 1000,
-        "userId": test_유저.id,
+        "userId": test_1600_포인트가_있는_유저.id,
         "userName": "테스트유저",
         "phoneNumber": "010-1234-5678",
         "shippingAddress": "서울시 강남구...",
@@ -271,11 +277,11 @@ def test_주문_생성_매개변수_누락(client):
 
 
 @pytest.mark.django_db
-def test_결제_성공_서비스_확인(test_유저):
+def test_결제_성공_서비스_확인(test_1600_포인트가_있는_유저):
     # 주문 생성
     order = Order.objects.create(
         id="test_order_123",
-        user=test_유저,
+        user=test_1600_포인트가_있는_유저,
         total_amount=4000,
         original_amount=5000,
         shipping_address="서울시 강남구...",
@@ -315,7 +321,7 @@ def test_결제_성공_서비스_확인(test_유저):
     # 결과 검증
     assert result["status"] == "결제 완료"
     assert result["data"] == response_data
-    assert result["user_id"] == test_유저.id
+    assert result["user_id"] == test_1600_포인트가_있는_유저.id
     assert result["order_id"] == order.id
 
     # Order 및 Transaction 객체가 올바르게 업데이트되었는지 확인
@@ -345,6 +351,10 @@ def test_결제_성공_서비스_확인(test_유저):
         {"product_name": "상품1", "price": 3000, "quantity": 1},
         {"product_name": "상품2", "price": 2000, "quantity": 2},
     ]
+
+    # 포인트 차감 확인
+    user = User.objects.get(id=test_1600_포인트가_있는_유저.id)
+    assert user.points == 600
 
 
 @pytest.mark.django_db

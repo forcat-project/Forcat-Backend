@@ -1,5 +1,5 @@
 # payments/service.py
-
+from account.services import PointService
 from payments.models import Transaction, ProductOrder
 import logging
 
@@ -16,22 +16,14 @@ def confirm_payment_success(order, response_data):
             pg_tx_id=response_data.get("lastTransactionKey"),
             receipt_url=response_data.get("receipt", {}).get("url"),
         )
+
+        PointService.deduct_point(user_id=order.user_id, point_used=order.points_used)
+
         order.payment = payment
         order.shipping_status = "배송 준비중"
         order.status = "결제 완료"
         order.payment_method = response_data.get("method")
         order.save()
-
-        # 사용자가 구매한 상품들 다 닮기
-        product_orders = ProductOrder.objects.filter(order=order)
-        products = [
-            {
-                "product_name": product.product_name,
-                "price": product.price,
-                "quantity": product.quantity,
-            }
-            for product in product_orders
-        ]
 
         logger.info(f"주문 {order.id}에 대한 결제가 확인되었습니다.")
         return {
