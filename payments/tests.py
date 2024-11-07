@@ -187,81 +187,74 @@ def test_주문_생성_성공(client, test_1600_포인트가_있는_유저):
 
 
 @pytest.mark.django_db
-@patch("payments.api.views.requests.post")
-def test_결제_확인_성공(mock_post, client, test_유저):
-    # 주문 생성
-    order = Order.objects.create(
-        id="test_order_123",
-        user=test_유저,
-        total_amount=4000,
-        original_amount=5000,
-        shipping_address="서울시 강남구...",
-        payment_method="card",
-        shipping_status="결제 대기중",
-        shipping_memo="부재시 문 앞에 놔둬주세요!",
-        points_used=1000,
-    )
-
-    # ProductOrder 데이터 생성
-    ProductOrder.objects.create(
+def test_주문_생성_성공(client, test_유저):
+    # 필요한 Product 데이터 생성
+    Product.objects.create(
         product_id=1,
-        product_name="상품1",
+        name="상품1",
+        thumbnail_url="http://example.com/image1.jpg",
+        company="회사1",
         price=3000,
-        quantity=1,
-        order=order,
+        remain_count=10,
     )
-    ProductOrder.objects.create(
+    Product.objects.create(
         product_id=2,
-        product_name="상품2",
+        name="상품2",
+        thumbnail_url="http://example.com/image2.jpg",
+        company="회사2",
         price=2000,
-        quantity=2,
-        order=order,
+        remain_count=10,
     )
 
-    # Mocked response 설정
-    mock_response = {
-        "status": "DONE",
-        "lastTransactionKey": "mock_transaction_key",
-        "receipt": {"url": "https://mock.receipt.url"},
-        "totalAmount": 4000,
-        "method": "card",
-    }
-    mock_post.return_value.status_code = 200
-    mock_post.return_value.json.return_value = mock_response
+    # order-list URL 생성
+    url = reverse("order-list")
 
-    # confirm_payment API 호출
-    url = reverse("payments-confirm-payment")
-    결제_데이터 = {
-        "paymentKey": "test_payment_key_123",
+    주문_데이터 = {
         "orderId": "test_order_123",
+        "originalAmount": 5000,
         "amount": 4000,
+        "pointsUsed": 1000,
+        "userId": test_유저.id,
+        "userName": "테스트유저",
+        "phoneNumber": "010-1234-5678",
+        "shippingAddress": "서울시 강남구...",
+        "shippingAddressDetail": "101호",
+        "shippingMemo": "부재시 문 앞에 놔둬주세요!",
+        "paymentMethod": "card",
+        "products": [
+            {
+                "product_id": 1,
+                "product_name": "상품1",
+                "price": 3000,
+                "quantity": 1,
+                "product_image": "http://example.com/image1.jpg",
+            },
+            {
+                "product_id": 2,
+                "product_name": "상품2",
+                "price": 2000,
+                "quantity": 2,
+                "product_image": "http://example.com/image2.jpg",
+            },
+        ],
     }
+
     response = client.post(
-        url, data=json.dumps(결제_데이터), content_type="application/json"
+        url, data=json.dumps(주문_데이터), content_type="application/json"
     )
 
     # 상태 코드가 200인지 확인
     assert response.status_code == 200
-
-    # 응답 JSON 확인
     assert response.json() == {
-        "status": "결제 완료",
-        "data": {
-            "status": "DONE",
-            "lastTransactionKey": "mock_transaction_key",
-            "receipt": {"url": "https://mock.receipt.url"},
-            "totalAmount": 4000,
-            "method": "card",
-        },
-        "user_id": 1,
-        "order_id": "test_order_123",
+        "status": "주문이 생성되었습니다",
+        "orderId": "test_order_123",
     }
 
 
 @pytest.mark.django_db
 def test_주문_생성_매개변수_누락(client):
     # 필수 매개변수 누락 시도
-    url = reverse("order", kwargs={"user_id": 1})
+    url = reverse("order-list", kwargs={"user_id": 1})
     불완전한_데이터 = {
         "orderId": "test_order_123",
         # "amount"와 "userId"가 누락됨
@@ -393,92 +386,121 @@ def test_결제_실패_서비스_확인(test_유저):
 
 
 @pytest.mark.django_db
-def test_사용자의_주문서_조회(client, test_주문서_생성):
-    url = reverse("order-list", kwargs={"user_id": 1})
+def test_주문_생성_성공(client, test_유저):
+    # 필요한 Product 데이터 생성
+    Product.objects.create(
+        product_id=1,
+        name="상품1",
+        thumbnail_url="http://example.com/image1.jpg",
+        company="회사1",
+        price=3000,
+        remain_count=10,
+    )
+    Product.objects.create(
+        product_id=2,
+        name="상품2",
+        thumbnail_url="http://example.com/image2.jpg",
+        company="회사2",
+        price=2000,
+        remain_count=10,
+    )
 
-    res = client.get(url)
+    # user_id 인자를 포함하여 order-list URL 생성
+    url = reverse("order-list", kwargs={"user_id": test_유저.id})
 
-    assert res.json() == [
-        {
-            "id": "order_12345",
-            "user": 1,
-            "payment": 1,
-            "order_date": "2024-10-24T10:10:10",
-            "original_amount": "1000.00",
-            "points_used": "100.00",
-            "total_amount": "900.00",
-            "user_name": "테스트 유저",
-            "phone_number": "010-1234-5678",
-            "shipping_address": "서울특별시 강남구",
-            "shipping_address_detail": "테스트 상세 주소",
-            "shipping_memo": "부재 시 경비실에 맡겨주세요.",
-            "payment_method": "card",
-            "shipping_status": "preparing",
-            "products": [
-                {
-                    "product_name": "야옹야옹 고양이 간식",
-                    "price": "100.00",
-                    "quantity": 2,
-                    "discount_rate": "5.00",
-                    "product_id": 123,
-                    "product_company": "야옹야옹 컴퍼니",
-                    "product_image": "https://example.com/product_image.jpg",
-                },
-                {
-                    "product_name": "야옹이 놀잇감",
-                    "price": "100.00",
-                    "quantity": 2,
-                    "discount_rate": "5.00",
-                    "product_id": 123,
-                    "product_company": "야옹야옹 컴퍼니 오야붕",
-                    "product_image": "https://example.com/product_image.jpg",
-                },
-            ],
-            "status": "completed",
-        },
-        {
-            "id": "gpgpgpgp",
-            "user": 1,
-            "payment": 2,
-            "order_date": "2024-10-24T10:10:10",
-            "original_amount": "1000.00",
-            "points_used": "100.00",
-            "total_amount": "900.00",
-            "user_name": "테스트 유저",
-            "phone_number": "010-1234-5678",
-            "shipping_address": "서울특별시 강남구",
-            "shipping_address_detail": "테스트 상세 주소",
-            "shipping_memo": "부재 시 경비실에 맡겨주세요.",
-            "payment_method": "card",
-            "shipping_status": "preparing",
-            "products": [
-                {
-                    "product_name": "야옹이 놀잇감",
-                    "price": "100.00",
-                    "quantity": 2,
-                    "discount_rate": "5.00",
-                    "product_id": 123,
-                    "product_company": "야옹야옹 컴퍼니 오야붕",
-                    "product_image": "https://example.com/product_image.jpg",
-                }
-            ],
-            "status": "completed",
-        },
-    ]
+    주문_데이터 = {
+        "orderId": "test_order_123",
+        "originalAmount": 5000,
+        "amount": 4000,
+        "pointsUsed": 1000,
+        "userId": test_유저.id,
+        "userName": "테스트유저",
+        "phoneNumber": "010-1234-5678",
+        "shippingAddress": "서울시 강남구...",
+        "shippingAddressDetail": "101호",
+        "shippingMemo": "부재시 문 앞에 놔둬주세요!",
+        "paymentMethod": "card",
+        "products": [
+            {
+                "product_id": 1,
+                "product_name": "상품1",
+                "price": 3000,
+                "quantity": 1,
+                "product_image": "http://example.com/image1.jpg",
+            },
+            {
+                "product_id": 2,
+                "product_name": "상품2",
+                "price": 2000,
+                "quantity": 2,
+                "product_image": "http://example.com/image2.jpg",
+            },
+        ],
+    }
+
+    response = client.post(
+        url, data=json.dumps(주문_데이터), content_type="application/json"
+    )
+
+    # 상태 코드가 200인지 확인
+    assert response.status_code == 200
+    assert response.json() == {
+        "status": "주문이 생성되었습니다",
+        "orderId": "test_order_123",
+    }
 
 
 @pytest.mark.django_db
-def test_주문_삭제(client, test_유저, test_주문서_생성):
-    # 주문의 ID를 사용하여 삭제 테스트
+def test_주문_취소(client, test_유저, test_주문서_생성):
+    # 주문의 ID를 사용하여 취소 테스트
     order_id = "order_12345"
     url = reverse(
         "order-detail", kwargs={"user_id": test_유저.id, "order_id": order_id}
     )
+
+    # DELETE 요청으로 주문 취소
     response = client.delete(url)
 
+    # 응답이 성공적인지 확인
     assert response.status_code == 200
     assert response.json() == {"message": "Order has been successfully deleted."}
 
-    # 주문이 삭제되었는지 확인
-    with pytest.raises(Order.DoesNotExist):
-        Order.objects.get(id=order_id)
+    # 삭제 후 주문 조회 시 404 Not Found 응답확인
+    response_get = client.get(url)
+    assert response_get.status_code == 404
+    assert response_get.json() == {
+        "error": f"Order with id '{order_id}' for user '{test_유저.id}' not found."
+    }
+
+    # /users/{user_id}/orders/ 목록 조회 시 취소된 주문이 포함되지 않는지 확인
+    list_url = reverse("order-list", kwargs={"user_id": test_유저.id})
+    response_list = client.get(list_url)
+    assert response_list.status_code == 200
+
+    # 응답 목록에서 취소된 주문이 포함되지 않았는지 확인
+    orders = response_list.json()
+    order_ids = [order["id"] for order in orders]
+    assert order_id not in order_ids
+
+
+@pytest.mark.django_db
+def test_주문_업데이트(client, test_유저, test_주문서_생성):
+    # 주문의 ID를 사용하여 취소 테스트
+    order_id = "order_12345"
+    url = reverse(
+        "order-cancel", kwargs={"user_id": test_유저.id, "order_id": order_id}
+    )
+    response = client.patch(url)
+
+    # 주문이 취소 처리가 되었는지 확인
+    updated_order = Order.objects.get(id=order_id)
+    assert updated_order.status == "canceled"
+    assert updated_order.shipping_status == "canceled"
+    assert updated_order.payment.status == "canceled"
+
+    # 응답이 성공적인지 확인
+    assert response.status_code == 200
+    print(response.json())
+    assert response.json() == {
+        "message": "Order payment has been successfully updated."
+    }

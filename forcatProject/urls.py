@@ -2,7 +2,7 @@ from django.urls import include, path
 from drf_yasg import openapi
 
 from account.api.token_obtain_views import CustomTokenRefreshView
-from payments.api.views import order_detail, OrderViewSet
+from payments.api.views import order_detail, OrderViewSet, cancel_order
 from drf_yasg.views import get_schema_view
 from rest_framework import routers
 from rest_framework.permissions import AllowAny
@@ -126,6 +126,11 @@ user_resource_routes = [
                                 "<str:order_id>",
                                 order_detail,
                                 name="order-detail",
+                            ),
+                            path(
+                                "<str:order_id>/cancel",
+                                cancel_order,
+                                name="order-cancel",
                             ),
                         ]
                     ),

@@ -81,6 +81,7 @@ class Order(models.Model):
             ("completed", "결제 완료"),
             ("refunded", "환불 완료"),
             ("failed", "결제 실패"),
+            ("canceled", "주문 취소"),
         ],
     )  # 결제 상태
     payment_method = models.CharField(
@@ -112,6 +113,7 @@ class Order(models.Model):
         ],
     )
     shipping_memo = models.TextField(null=True, blank=True)
+    cancellation_date = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f"Order {self.id} by {self.user.username}"

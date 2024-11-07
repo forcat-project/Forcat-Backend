@@ -6,6 +6,7 @@ import json
 from drf_yasg import openapi
 from account.models import User
 from django.conf import settings
+from django.utils import timezone
 from product.models import Product
 from django.http import JsonResponse
 from .serializers import OrderSerializer
@@ -130,7 +131,7 @@ class OrderViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     def get_queryset(self):
         user_id = self.kwargs.get("user_id")
         if user_id is not None:
-            return Order.objects.filter(user_id=user_id)
+            return Order.objects.filter(user_id=user_id, cancellation_date=None)
         return Order.objects.none()  # user_id가 없는 경우 빈 쿼리셋 반환
 
     @swagger_auto_schema(
@@ -288,12 +289,12 @@ class OrderViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
                 shipping_address_detail=shipping_address_detail,
                 shipping_memo=shipping_memo,
                 points_used=points_used,
+                cancellation_date=None,
             )
             # 재고 감소 및 ProductOrder 생성
             for product in products:
                 product_id = product["product_id"]
                 quantity = product["quantity"]
-                product_image = product["product_image"]
                 product_obj = Product.objects.get(product_id=product_id)
 
                 # 재고 업데이트
@@ -331,6 +332,14 @@ def order_detail(request, user_id, order_id):
 
         if request.method == "GET":
             # ProductOrder 정보 조회
+            if order.cancellation_date is not None:
+                return Response(
+                    {
+                        "error": f"Order with id '{order_id}' for user '{user_id}' not found."
+                    },
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+
             product_orders = ProductOrder.objects.filter(order=order)
             logger.info(
                 f"ProductOrder 조회 성공 - order_id: {order_id}, 상품 수: {product_orders.count()}"
@@ -357,13 +366,47 @@ def order_detail(request, user_id, order_id):
             return Response(response_data, status=status.HTTP_200_OK)
 
         elif request.method == "DELETE":
-            # 삭제 처리
-            order.delete()
+            # 주문 취소 시간 입력
+            order.cancellation_date = timezone.now()
+            order.save()
             logger.info(f"Order 삭제 성공 - order_id: {order_id}, user_id: {user_id}")
             return Response(
                 {"message": "Order has been successfully deleted."},
                 status=status.HTTP_200_OK,
             )
+    except Order.DoesNotExist:
+        error_message = f"Order with id '{order_id}' for user '{user_id}' not found."
+        logger.warning(f"Order 조회 실패: {error_message}")
+        return Response({"error": error_message}, status=status.HTTP_404_NOT_FOUND)
+
+    except Exception as e:
+        logger.error(f"예상치 못한 오류 발생: {str(e)}")
+        return Response(
+            {"error": "An unexpected error occurred."},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(["PATCH"])
+def cancel_order(request, user_id, order_id):
+    try:
+        logger.info(f"Order 결제 취소 시도 - user_id: {user_id}, order_id: {order_id}")
+        order = Order.objects.get(id=order_id, user__id=user_id, cancellation_date=None)
+
+        # 결제 취소 업데이트 처리
+        order.payment.status = "canceled"
+        order.shipping_status = "canceled"
+        order.status = "canceled"
+        order.payment.save()
+        order.save()
+
+        logger.info(
+            f"Order 결제 취소 업데이트 성공 - order_id: {order_id}, user_id: {user_id}"
+        )
+        return Response(
+            {"message": "Order payment has been successfully updated."},
+            status=status.HTTP_200_OK,
+        )
 
     except Order.DoesNotExist:
         error_message = f"Order with id '{order_id}' for user '{user_id}' not found."
