@@ -113,6 +113,7 @@ class Order(models.Model):
         ],
     )
     shipping_memo = models.TextField(null=True, blank=True)
+    cancellation_date = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f"Order {self.id} by {self.user.username}"

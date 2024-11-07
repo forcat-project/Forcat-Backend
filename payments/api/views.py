@@ -6,6 +6,7 @@ import json
 from drf_yasg import openapi
 from account.models import User
 from django.conf import settings
+from django.utils import timezone
 from product.models import Product
 from django.http import JsonResponse
 from .serializers import OrderSerializer
@@ -323,7 +324,12 @@ class OrderViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
             return JsonResponse({"error": str(e)}, status=500)
 
 
-@api_view(["GET", "DELETE", "PATCH"])
+@api_view(
+    [
+        "GET",
+        "DELETE",
+    ]
+)
 def order_detail(request, user_id, order_id):
     try:
         logger.info(f"Order 조회 시도 - user_id: {user_id}, order_id: {order_id}")
@@ -357,25 +363,16 @@ def order_detail(request, user_id, order_id):
             return Response(response_data, status=status.HTTP_200_OK)
 
         elif request.method == "DELETE":
-            # 삭제 처리
-            order.delete()
-            logger.info(f"Order 삭제 성공 - order_id: {order_id}, user_id: {user_id}")
-            return Response(
-                {"message": "Order has been successfully deleted."},
-                status=status.HTTP_200_OK,
-            )
-
-        elif request.method == "PATCH":
-            # 결제 취소 업데이트 처리
+            # 주문 취소 시간 입력
+            order.cancellation_date = timezone.now()
             order.payment.status = "canceled"
             order.shipping_status = "canceled"
             order.status = "canceled"
             order.payment.save()
             order.save()
-
-            logger.info(f"Order 결제 취소 업데이트 성공 - order_id: {order_id}, user_id: {user_id}")
+            logger.info(f"Order 삭제 성공 - order_id: {order_id}, user_id: {user_id}")
             return Response(
-                {"message": "Order payment has been successfully updated."},
+                {"message": "Order has been successfully deleted."},
                 status=status.HTTP_200_OK,
             )
 
