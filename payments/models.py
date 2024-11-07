@@ -81,6 +81,7 @@ class Order(models.Model):
             ("completed", "결제 완료"),
             ("refunded", "환불 완료"),
             ("failed", "결제 실패"),
+            ("canceled", "주문 취소"),
         ],
     )  # 결제 상태
     payment_method = models.CharField(

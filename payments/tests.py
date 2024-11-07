@@ -472,3 +472,26 @@ def test_주문_삭제(client, test_유저, test_주문서_생성):
     # 주문이 삭제되었는지 확인
     with pytest.raises(Order.DoesNotExist):
         Order.objects.get(id=order_id)
+
+
+@pytest.mark.django_db
+def test_주문_업데이트(client, test_유저, test_주문서_생성):
+    # 주문의 ID를 사용하여 업데이트 테스트
+    order_id = "order_12345"
+    url = reverse(
+        "order-detail", kwargs={"user_id": test_유저.id, "order_id": order_id}
+    )
+
+    # PATCH 요청으로 결제 취소 요청
+    response = client.patch(url, content_type="application/json")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "message": "Order payment has been successfully updated."
+    }
+
+    # 업데이트된 주문 상태 확인
+    updated_order = Order.objects.get(id=order_id)
+    assert updated_order.status == "canceled"
+    assert updated_order.shipping_status == "canceled"
+    assert updated_order.payment.status == "canceled"
