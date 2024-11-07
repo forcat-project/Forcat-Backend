@@ -332,6 +332,14 @@ def order_detail(request, user_id, order_id):
 
         if request.method == "GET":
             # ProductOrder 정보 조회
+            if order.cancellation_date is not None:
+                return Response(
+                    {
+                        "error": f"Order with id '{order_id}' for user '{user_id}' not found."
+                    },
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+
             product_orders = ProductOrder.objects.filter(order=order)
             logger.info(
                 f"ProductOrder 조회 성공 - order_id: {order_id}, 상품 수: {product_orders.count()}"
@@ -383,7 +391,7 @@ def order_detail(request, user_id, order_id):
 def cancel_order(request, user_id, order_id):
     try:
         logger.info(f"Order 결제 취소 시도 - user_id: {user_id}, order_id: {order_id}")
-        order = Order.objects.get(id=order_id, user__id=user_id)
+        order = Order.objects.get(id=order_id, user__id=user_id, cancellation_date=None)
 
         # 결제 취소 업데이트 처리
         order.payment.status = "canceled"

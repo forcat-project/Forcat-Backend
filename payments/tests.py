@@ -455,13 +455,22 @@ def test_주문_취소(client, test_유저, test_주문서_생성):
     assert response.status_code == 200
     assert response.json() == {"message": "Order has been successfully deleted."}
 
-    # 삭제 후 주문 조회하여 cancellation_date 확인
+    # 삭제 후 주문 조회 시 404 Not Found 응답확인
     response_get = client.get(url)
-    assert response_get.status_code == 200
+    assert response_get.status_code == 404
+    assert response_get.json() == {
+        "error": f"Order with id '{order_id}' for user '{test_유저.id}' not found."
+    }
 
-    # 조회된 주문 데이터에서 cancellation_date 확인
-    cancled_order_data = response_get.json()
-    assert cancled_order_data["order_info"]["cancellation_date"] is not None
+    # /users/{user_id}/orders/ 목록 조회 시 취소된 주문이 포함되지 않는지 확인
+    list_url = reverse("order-list", kwargs={"user_id": test_유저.id})
+    response_list = client.get(list_url)
+    assert response_list.status_code == 200
+
+    # 응답 목록에서 취소된 주문이 포함되지 않았는지 확인
+    orders = response_list.json()
+    order_ids = [order["id"] for order in orders]
+    assert order_id not in order_ids
 
 
 @pytest.mark.django_db
