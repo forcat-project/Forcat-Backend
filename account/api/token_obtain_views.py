@@ -1,6 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, serializers
+from rest_framework_simplejwt.tokens import RefreshToken
 
 
 class TokenRefreshSerializer(serializers.Serializer):
@@ -17,9 +18,10 @@ class CustomTokenRefreshView(APIView):
         refresh = serializer.validated_data["refresh_token"]
 
         # 새로운 Access Token 생성
-        access_token = str(refresh.access_token)
+        refresh_token = RefreshToken(refresh)
+        access_token = str(refresh_token.access_token)
 
         return Response(
-            {"access_token": access_token, "refresh_token": str(refresh)},
+            {"access_token": access_token, "refresh_token": str(refresh_token)},
             status=status.HTTP_200_OK,
         )
