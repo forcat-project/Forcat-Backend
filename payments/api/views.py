@@ -289,12 +289,12 @@ class OrderViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
                 shipping_address_detail=shipping_address_detail,
                 shipping_memo=shipping_memo,
                 points_used=points_used,
+                cancellation_date=None,
             )
             # 재고 감소 및 ProductOrder 생성
             for product in products:
                 product_id = product["product_id"]
                 quantity = product["quantity"]
-                product_image = product["product_image"]
                 product_obj = Product.objects.get(product_id=product_id)
 
                 # 재고 업데이트
