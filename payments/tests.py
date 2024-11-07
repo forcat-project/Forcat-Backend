@@ -447,17 +447,21 @@ def test_주문_취소(client, test_유저, test_주문서_생성):
     url = reverse(
         "order-detail", kwargs={"user_id": test_유저.id, "order_id": order_id}
     )
+
+    # DELETE 요청으로 주문 취소
     response = client.delete(url)
-
-    # 주문이 취소 처리가 되었는지 확인
-    cancled_order = Order.objects.get(id=order_id)
-
-    # cancellation_date가 기록되었는지 확인
-    assert cancled_order.cancellation_date is not None
 
     # 응답이 성공적인지 확인
     assert response.status_code == 200
     assert response.json() == {"message": "Order has been successfully deleted."}
+
+    # 삭제 후 주문 조회하여 cancellation_date 확인
+    response_get = client.get(url)
+    assert response_get.status_code == 200
+
+    # 조회된 주문 데이터에서 cancellation_date 확인
+    cancled_order_data = response_get.json()
+    assert cancled_order_data["order_info"]["cancellation_date"] is not None
 
 
 @pytest.mark.django_db
@@ -465,7 +469,7 @@ def test_주문_업데이트(client, test_유저, test_주문서_생성):
     # 주문의 ID를 사용하여 취소 테스트
     order_id = "order_12345"
     url = reverse(
-        "order-detail", kwargs={"user_id": test_유저.id, "order_id": order_id}
+        "order-cancel", kwargs={"user_id": test_유저.id, "order_id": order_id}
     )
     response = client.patch(url)
 

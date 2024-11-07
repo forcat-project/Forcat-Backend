@@ -324,7 +324,7 @@ class OrderViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
             return JsonResponse({"error": str(e)}, status=500)
 
 
-@api_view(["GET", "DELETE", "PATCH"])
+@api_view(["GET", "DELETE"])
 def order_detail(request, user_id, order_id):
     try:
         logger.info(f"Order 조회 시도 - user_id: {user_id}, order_id: {order_id}")
@@ -357,22 +357,6 @@ def order_detail(request, user_id, order_id):
             )
             return Response(response_data, status=status.HTTP_200_OK)
 
-        elif request.method == "PATCH":
-            # 결제 취소 업데이트 처리
-            order.payment.status = "canceled"
-            order.shipping_status = "canceled"
-            order.status = "canceled"
-            order.payment.save()
-            order.save()
-
-            logger.info(
-                f"Order 결제 취소 업데이트 성공 - order_id: {order_id}, user_id: {user_id}"
-            )
-            return Response(
-                {"message": "Order payment has been successfully updated."},
-                status=status.HTTP_200_OK,
-            )
-
         elif request.method == "DELETE":
             # 주문 취소 시간 입력
             order.cancellation_date = timezone.now()
@@ -382,6 +366,39 @@ def order_detail(request, user_id, order_id):
                 {"message": "Order has been successfully deleted."},
                 status=status.HTTP_200_OK,
             )
+    except Order.DoesNotExist:
+        error_message = f"Order with id '{order_id}' for user '{user_id}' not found."
+        logger.warning(f"Order 조회 실패: {error_message}")
+        return Response({"error": error_message}, status=status.HTTP_404_NOT_FOUND)
+
+    except Exception as e:
+        logger.error(f"예상치 못한 오류 발생: {str(e)}")
+        return Response(
+            {"error": "An unexpected error occurred."},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(["PATCH"])
+def cancel_order(request, user_id, order_id):
+    try:
+        logger.info(f"Order 결제 취소 시도 - user_id: {user_id}, order_id: {order_id}")
+        order = Order.objects.get(id=order_id, user__id=user_id)
+
+        # 결제 취소 업데이트 처리
+        order.payment.status = "canceled"
+        order.shipping_status = "canceled"
+        order.status = "canceled"
+        order.payment.save()
+        order.save()
+
+        logger.info(
+            f"Order 결제 취소 업데이트 성공 - order_id: {order_id}, user_id: {user_id}"
+        )
+        return Response(
+            {"message": "Order payment has been successfully updated."},
+            status=status.HTTP_200_OK,
+        )
 
     except Order.DoesNotExist:
         error_message = f"Order with id '{order_id}' for user '{user_id}' not found."

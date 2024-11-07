@@ -40,4 +40,5 @@ class OrderSerializer(serializers.ModelSerializer):
             "shipping_status",
             "products",
             "status",
+            "cancellation_date",
         ]
